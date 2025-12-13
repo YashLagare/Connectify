@@ -1,5 +1,6 @@
 import express from "express";
 import { ENV } from "./config/env.js";
+import { connectDB } from "./DB/db.js";
 
 const app = express();
 
@@ -11,4 +12,6 @@ app.get("/", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  connectDB();
 });
+
