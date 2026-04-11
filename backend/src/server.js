@@ -1,8 +1,11 @@
+import { clerkMiddleware } from "@clerk/express";
 import express from "express";
 import { ENV } from "./config/env.js";
 import { connectDB } from "./DB/db.js";
 
 const app = express();
+
+app.use(clerkMiddleware());
 
 const PORT = ENV.PORT ;
 
