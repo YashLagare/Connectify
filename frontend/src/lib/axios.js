@@ -1,4 +1,3 @@
-//https://connectify-mocha-psi.vercel.app/api
 
 import axios from "axios";
 
