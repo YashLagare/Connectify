@@ -26,7 +26,7 @@ app.get("/debug-sentry", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello Worldqq!");
+  res.send("backend is working!");
 });
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
