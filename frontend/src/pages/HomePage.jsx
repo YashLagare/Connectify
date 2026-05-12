@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router";
 import PageLoader from "../components/PageLoader";
 import { useStreamChat } from "../hooks/useStreamChat";
 
+import { HashIcon, PlusIcon, UsersIcon } from "lucide-react";
 import {
   Channel,
   ChannelList,
@@ -13,9 +14,8 @@ import {
   Thread,
   Window
 } from "stream-chat-react";
-
-import { HashIcon, PlusIcon, UsersIcon } from "lucide-react";
 import CreateChannelModal from "../components/CreateChannelModal";
+import CustomChannelHeader from "../components/CustomChannelHeader";
 import CustomChannelPreview from "../components/CustomChannelPreview";
 import UsersList from "../components/UsersList";
 import "../styles/stream-chat-theme.css";
@@ -112,7 +112,7 @@ const HomePage = () => {
           <div className="chat-main">
             <Channel channel={activeChannel}>
               <Window>
-                {/* <CustomChannelHeader /> */}
+                <CustomChannelHeader />
                 <MessageList />
                 <MessageInput />
               </Window>

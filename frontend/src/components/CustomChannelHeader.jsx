@@ -7,6 +7,7 @@ import MembersModal from "./MembersModal";
 import PinnedMessagesModal from "./PinnedMessagesModal";
 
 const CustomChannelHeader = () => {
+    
     const { channel } = useChannelStateContext();
     const { user } = useUser();
 
