@@ -1,4 +1,4 @@
-# Connectify — Production Documentation (Frontend + Backend)
+# Connectify — Documentation
 
 Author: Yash Lagare
 
