@@ -1,13 +1,20 @@
 import { useUser } from "@clerk/clerk-react";
-import { HashIcon, LockIcon, PinIcon, UsersIcon, VideoIcon } from "lucide-react";
+import {
+    HashIcon,
+    LockIcon,
+    MenuIcon,
+    PinIcon,
+    UserPlusIcon,
+    UsersIcon,
+    VideoIcon
+} from "lucide-react";
 import { useState } from "react";
 import { useChannelStateContext } from "stream-chat-react";
 import InviteModal from "./InviteModal";
 import MembersModal from "./MembersModal";
 import PinnedMessagesModal from "./PinnedMessagesModal";
 
-const CustomChannelHeader = () => {
-    
+const CustomChannelHeader = ({ onMobileMenuClick }) => {
     const { channel } = useChannelStateContext();
     const { user } = useUser();
 
@@ -34,63 +41,127 @@ const CustomChannelHeader = () => {
         if (channel) {
             const callUrl = `${window.location.origin}/call/${channel.id}`;
             await channel.sendMessage({
-                text: `I've started a video call. Join me here: ${callUrl}`,
+                text: `🎥 Video call started! Join here: ${callUrl}`,
             });
         }
     };
 
     return (
-        <div className="h-14 border-b border-gray-200 flex items-center px-4 justify-between bg-white">
-            <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                    {channel.data?.private ? (
-                        <LockIcon className="size-4 text-[#616061]" />
-                    ) : (
-                        <HashIcon className="size-4 text-[#616061]" />
+        <>
+            <div className="h-14 border-b border-gray-200 flex items-center px-4 justify-between bg-white/95 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                    {/* Mobile Menu Button */}
+                    {onMobileMenuClick && (
+                        <button
+                            onClick={onMobileMenuClick}
+                            className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            <MenuIcon className="w-5 h-5 text-gray-600" />
+                        </button>
                     )}
 
-                    {isDM && otherUser?.user?.image && (
-                        <img
-                            src={otherUser.user.image}
-                            alt={otherUser.user.name || otherUser.user.id}
-                            className="size-7 rounded-full object-cover mr-1"
-                        />
-                    )}
+                    {/* Channel Info */}
+                    <div className="flex items-center gap-2.5">
+                        {/* Channel Type Icon */}
+                        <div className={`p-1.5 rounded-lg ${channel.data?.private ? 'bg-orange-50' : 'bg-blue-50'
+                            }`}>
+                            {channel.data?.private ? (
+                                <LockIcon className="w-4 h-4 text-orange-600" />
+                            ) : (
+                                <HashIcon className="w-4 h-4 text-blue-600" />
+                            )}
+                        </div>
 
-                    <span className="font-medium text-[#1D1C1D]">
-                        {isDM ? otherUser?.user?.name || otherUser?.user?.id : channel.data?.id}
-                    </span>
+                        {/* DM Avatar */}
+                        {isDM && otherUser?.user?.image && (
+                            <div className="relative">
+                                <img
+                                    src={otherUser.user.image}
+                                    alt={otherUser.user.name || otherUser.user.id}
+                                    className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                                />
+                                {otherUser.user.online && (
+                                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 
+                                 border-2 border-white rounded-full" />
+                                )}
+                            </div>
+                        )}
+
+                        {/* Channel Name */}
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold text-gray-900">
+                                    {isDM ? otherUser?.user?.name || otherUser?.user?.id : channel.data?.name || channel.data?.id}
+                                </span>
+                                {channel.data?.private && (
+                                    <span className="text-[10px] font-medium bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">
+                                        PRIVATE
+                                    </span>
+                                )}
+                            </div>
+                            {isDM && otherUser?.user?.online && (
+                                <span className="text-xs text-green-600 font-medium">Online</span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-1">
+                    {/* Members Count */}
+                    <button
+                        onClick={() => setShowMembers(true)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-gray-100 rounded-lg 
+                     transition-colors group"
+                        title="View members"
+                    >
+                        <UsersIcon className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+                        <span className="text-sm text-gray-600 group-hover:text-gray-900 font-medium">
+                            {memberCount}
+                        </span>
+                    </button>
+
+                    {/* Video Call */}
+                    <button
+                        onClick={handleVideoCall}
+                        className="p-1.5 hover:bg-blue-50 rounded-lg transition-colors group"
+                        title="Start Video Call"
+                    >
+                        <VideoIcon className="w-5 h-5 text-blue-600 group-hover:text-blue-700" />
+                    </button>
+
+                    {/* Pinned Messages */}
+                    <button
+                        onClick={handleShowPinned}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors group relative"
+                        title="Pinned Messages"
+                    >
+                        <PinIcon className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+                        {pinnedMessages.length > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-gray-400 text-white 
+                             text-[10px] rounded-full flex items-center justify-center font-bold">
+                                {pinnedMessages.length}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* Invite Button (Private Channels) */}
+                    {channel.data?.private && (
+                        <button
+                            onClick={() => setShowInvite(true)}
+                            className="ml-2 px-4 py-1.5 bg-gradient-to-r from-purple-600 to-purple-700 
+                       text-white text-sm font-medium rounded-lg hover:shadow-lg 
+                       hover:shadow-purple-500/25 transition-all duration-200
+                       flex items-center gap-1.5 hover:scale-105 active:scale-95"
+                        >
+                            <UserPlusIcon className="w-4 h-4" />
+                            Invite
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className="flex items-center gap-3">
-                <button
-                    className="flex items-center gap-2 hover:bg-[#F8F8F8] py-1 px-2 rounded"
-                    onClick={() => setShowMembers(true)}
-                >
-                    <UsersIcon className="size-5 text-[#616061]" />
-                    <span className="text-sm text-[#616061]">{memberCount}</span>
-                </button>
-
-                <button
-                    className="hover:bg-[#F8F8F8] p-1 rounded"
-                    onClick={handleVideoCall}
-                    title="Start Video Call"
-                >
-                    <VideoIcon className="size-5 text-[#1264A3]" />
-                </button>
-
-                {channel.data?.private && (
-                    <button className="btn btn-primary" onClick={() => setShowInvite(true)}>
-                        Invite
-                    </button>
-                )}
-
-                <button className="hover:bg-[#F8F8F8] p-1 rounded" onClick={handleShowPinned}>
-                    <PinIcon className="size-4 text-[#616061]" />
-                </button>
-            </div>
-
+            {/* Modals */}
             {showMembers && (
                 <MembersModal
                     members={Object.values(channel.state.members)}
@@ -105,8 +176,13 @@ const CustomChannelHeader = () => {
                 />
             )}
 
-            {showInvite && <InviteModal channel={channel} onClose={() => setShowInvite(false)} />}
-        </div>
+            {showInvite && (
+                <InviteModal
+                    channel={channel}
+                    onClose={() => setShowInvite(false)}
+                />
+            )}
+        </>
     );
 };
 
