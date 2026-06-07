@@ -600,11 +600,10 @@
   font-weight: 800;
   font-family: "Monaco", monospace;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #fff 0%, #e0e0e0 50%, #fff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  text-shadow:
+    0 0 20px rgba(114, 9, 183, 0.3),
+    0 0 40px rgba(114, 9, 183, 0.15);
   position: relative;
 }
 
@@ -1134,4 +1133,142 @@
   .chat-main {
     border-radius: 0 0 0.75rem 0.75rem;
   }
+}
+
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Mobile sidebar scrollbar */
+.mobile-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-sidebar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+
+
+/* Shake animation for errors */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-out;
+}
+
+/* Custom scrollbar for member list */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Enhanced Radio Option (replaces existing) */
+.radio-option {
+  display: flex;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+}
+
+.radio-option:hover {
+  border-color: rgba(114, 9, 183, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+}
+
+
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Scale In Animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* Smooth channel hover transitions */
+.str-chat__channel-preview-messenger {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar for modals */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e0;
 }

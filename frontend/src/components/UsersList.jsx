@@ -1,10 +1,9 @@
+import * as Sentry from "@sentry/react";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircleIcon, CircleIcon, UsersIcon } from "lucide-react";
 import { useCallback } from "react";
 import { useSearchParams } from "react-router";
 import { useChatContext } from "stream-chat-react";
-
-import * as Sentry from "@sentry/react";
-import { CircleIcon } from "lucide-react";
 
 const UsersList = ({ activeChannel }) => {
     const { client } = useChatContext();
@@ -19,7 +18,9 @@ const UsersList = ({ activeChannel }) => {
             { limit: 20 }
         );
 
-        const usersOnly = response.users.filter((user) => !user.id.startsWith("recording-"));
+        const usersOnly = response.users.filter(
+            (user) => !user.id.startsWith("recording-")
+        );
 
         return usersOnly;
     }, [client]);
@@ -32,39 +33,69 @@ const UsersList = ({ activeChannel }) => {
         queryKey: ["users-list", client?.user?.id],
         queryFn: fetchUsers,
         enabled: !!client?.user,
-        staleTime: 1000 * 60 * 5, // 5 mins
+        staleTime: 1000 * 60 * 5,
     });
-
-    // staleTime
-    // what it does: tells React Query the data is "fresh" for 5 minutes
-    // behavior: during these 5 minutes, React Query WON'T refetch the data automatically
 
     const startDirectMessage = async (targetUser) => {
         if (!targetUser || !client?.user) return;
 
         try {
-            //  bc stream does not allow channelId to be longer than 64 chars
-            const channelId = [client.user.id, targetUser.id].sort().join("-").slice(0, 64);
+            const channelId = [client.user.id, targetUser.id]
+                .sort()
+                .join("-")
+                .slice(0, 64);
+
             const channel = client.channel("messaging", channelId, {
                 members: [client.user.id, targetUser.id],
             });
+
             await channel.watch();
             setSearchParams({ channel: channel.id });
         } catch (error) {
-            console.log("Error creating DM", error),
-                Sentry.captureException(error, {
-                    tags: { component: "UsersList" },
-                    extra: {
-                        context: "create_direct_message",
-                        targetUserId: targetUser?.id,
-                    },
-                });
+            console.log("Error creating DM", error);
+            Sentry.captureException(error, {
+                tags: { component: "UsersList" },
+                extra: {
+                    context: "create_direct_message",
+                    targetUserId: targetUser?.id,
+                },
+            });
         }
     };
 
-    if (isLoading) return <div className="team-channel-list__message">Loading users...</div>;
-    if (isError) return <div className="team-channel-list__message">Failed to load users</div>;
-    if (!users.length) return <div className="team-channel-list__message">No other users found</div>;
+    // Loading State
+    if (isLoading) {
+        return (
+            <div className="px-4 py-6">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 animate-pulse">
+                        <div className="w-4 h-4 rounded-full bg-white/10" />
+                        <div className="flex-1 h-3 bg-white/10 rounded" />
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    // Error State
+    if (isError) {
+        return (
+            <div className="px-4 py-6 text-center">
+                <AlertCircleIcon className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                <p className="text-sm text-red-300/80">Failed to load users</p>
+            </div>
+        );
+    }
+
+    // Empty State
+    if (!users.length) {
+        return (
+            <div className="px-4 py-6 text-center">
+                <UsersIcon className="w-8 h-8 text-white/20 mx-auto mb-2" />
+                <p className="text-sm text-white/40">No other users found</p>
+            </div>
+        );
+    }
 
     return (
         <div className="team-channel-list__users">
@@ -80,38 +111,60 @@ const UsersList = ({ activeChannel }) => {
                     <button
                         key={user.id}
                         onClick={() => startDirectMessage(user)}
-                        className={`str-chat__channel-preview-messenger  ${isActive && "!bg-black/20 !hover:bg-black/20 border-l-8 border-purple-500 shadow-lg0"
+                        className={`str-chat__channel-preview-messenger group
+              ${isActive
+                                ? '!bg-gradient-to-r !from-purple-500/20 !to-purple-700/20 !border !border-purple-500/30'
+                                : 'hover:!bg-white/5'
                             }`}
                     >
-                        <div className="flex items-center gap-2 w-full">
-                            <div className="relative">
+                        <div className="flex items-center gap-3 w-full">
+                            {/* User Avatar with Online Indicator */}
+                            <div className="relative flex-shrink-0">
                                 {user.image ? (
                                     <img
                                         src={user.image}
                                         alt={user.name || user.id}
-                                        className="w-4 h-4 rounded-full"
+                                        className="w-5 h-5 rounded-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-4 h-4 rounded-full bg-gray-400 flex items-center justify-center">
-                                        <span className="text-xs text-white">
-                                            {(user.name || user.id).charAt(0).toUpperCase()}
-                                        </span>
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white
+                    ${isActive
+                                            ? 'bg-purple-500'
+                                            : 'bg-gray-500 group-hover:bg-gray-400'
+                                        }`}
+                                    >
+                                        {(user.name || user.id).charAt(0).toUpperCase()}
                                     </div>
                                 )}
 
+                                {/* Online Status */}
                                 <CircleIcon
-                                    className={`w-2 h-2 absolute -bottom-0.5 -right-0.5 ${user.online ? "text-green-500 fill-green-500" : "text-gray-400 fill-gray-400"
+                                    className={`w-2 h-2 absolute -bottom-0.5 -right-0.5 
+                    ${user.online
+                                            ? 'text-green-500 fill-green-500'
+                                            : 'text-gray-400 fill-gray-400'
                                         }`}
                                 />
                             </div>
 
-                            <span className="str-chat__channel-preview-messenger-name truncate">
-                                {user.name || user.id}
-                            </span>
+                            {/* User Name */}
+                            <div className="flex-1 min-w-0 text-left">
+                                <span className={`text-sm truncate block
+                  ${isActive ? 'text-white font-medium' : 'text-white/80 group-hover:text-white/90'}
+                `}>
+                                    {user.name || user.id}
+                                </span>
+                                {user.online && (
+                                    <span className="text-[10px] text-green-400/80">Online</span>
+                                )}
+                            </div>
 
+                            {/* Unread Badge */}
                             {unreadCount > 0 && (
-                                <span className="flex items-center justify-center ml-2 size-4 text-xs rounded-full bg-red-500 ">
-                                    {unreadCount}
+                                <span className="flex-shrink-0 min-w-[18px] h-[18px] flex items-center justify-center 
+                               text-[10px] font-bold rounded-full bg-red-500 text-white px-1
+                               shadow-lg shadow-red-500/25">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
                                 </span>
                             )}
                         </div>
