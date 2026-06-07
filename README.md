@@ -1,5 +1,8 @@
 # Connectify — Documentation
 
+<img width="1892" height="904" alt="image" src="https://github.com/user-attachments/assets/feae2a89-1274-4c46-b506-8daa2c360570" />
+
+
 Author: Yash Lagare
 
 ---
