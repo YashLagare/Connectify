@@ -24,7 +24,8 @@ Teams need fast, reliable, and secure internal communication with real-time chat
 
 Project Screenshot Placeholder:
 
-[INSERT_PROJECT_COVER_SCREENSHOT_HERE]
+<img width="1900" height="915" alt="image" src="https://github.com/user-attachments/assets/f33bb88c-3314-4a8d-977f-5279ad775ccc" />
+
 
 ---
 
