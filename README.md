@@ -1,685 +1,912 @@
-# Connectify — Documentation
+# Project Documentation
 
-<img width="1892" height="904" alt="image" src="https://github.com/user-attachments/assets/feae2a89-1274-4c46-b506-8daa2c360570" />
+## Project Name Connectify
 
+### Project Description
 
-Author: Yash Lagare
+Connectify is a real-time team communication application that combines **Stream Chat** (messaging, channels, unread counts, pinned messages, and direct messages) and **Stream Video** (video calls via a call page).
+
+### Business Problem Solved
+
+Teams need fast, reliable, and secure internal communication with real-time chat and lightweight video call initiation—without building and maintaining complex messaging infrastructure from scratch.
+
+### Target Users
+
+- Teams and individuals using browser-based real-time communication
+- Authenticated users managed via **Clerk**
+
+### Key Benefits
+
+- Real-time messaging experience via Stream Chat
+- Video call entry via Stream Video
+- Unified authentication through Clerk
+- Backend issues are tracked using Sentry
+
+Project Screenshot Placeholder:
+
+[INSERT_PROJECT_COVER_SCREENSHOT_HERE]
 
 ---
 
-## 1. Project Overview
+# 1. EXECUTIVE SUMMARY
 
-### Project name
+## Project Purpose
+
+Provide a web-based workspace for real-time team messaging (channels + DMs + pinned messages) and initiating video calls.
+
+## Core Features (Detected)
+
+- Authentication-gated UI using Clerk (frontend route protection)
+- Stream Chat integration:
+  - Channel list with unread counts
+  - Channel selection via URL query parameter (`channel`)
+  - Custom channel header with:
+    - members count
+    - pinned messages modal
+    - invite button for private channels
+    - “Start Video Call” action that posts a message including a call URL
+- Direct message support:
+  - DM channel creation/listing based on user selection
+- Stream Video integration:
+  - Video call page at `/call/:id`
+
+## Technology Summary
+
+- Frontend: React (Vite), Stream Chat React SDK, Stream Video SDK, Clerk React SDK, React Router, React Query, TailwindCSS
+- Backend: Express.js (ESM), Clerk Express middleware, Stream Chat server SDK token generation, MongoDB via Mongoose
+- Background/Events: Inngest functions triggered by Clerk events
+
+## Architecture Overview
+
+```text
+User
+  │
+  ▼
+Frontend (React + Stream Chat/Video SDKs)
+  │
+  ▼
+Backend (Express)
+  │
+  ├─ Authentication: Clerk middleware
+  ├─ Token issuance: Stream Chat token endpoint
+  └─ Inngest: Clerk event-driven sync to MongoDB + Stream
+  │
+  ▼
+Database (MongoDB via Mongoose)
+```
+
+## Business Value
+
+Reduces engineering effort by outsourcing messaging/video primitives to Stream while still integrating with an application-specific authentication layer (Clerk) and user persistence (MongoDB).
+
+---
+
+# 2. PROJECT OVERVIEW
+
+## Project Name
+
 Connectify
 
-### Purpose
-Connectify provides secure, real-time team communication with:
-- Authentication via Clerk
-- Real-time chat via Stream Chat
-- Real-time video calling via Stream Video
-- User synchronization and lifecycle automation via Inngest (event-driven)
+## Objective
 
-### High-level system summary
-The system is split into two deployable applications:
-- **Frontend (Vite + React)**: Auth-gated app that connects the signed-in user to Stream services and renders chat/call UIs.
-- **Backend (Express)**: Hosts middleware-protected API endpoints (currently `/api/chat/token`) and provides Stream token generation and infrastructure wiring (CORS, Clerk, MongoDB connection, Sentry, Inngest wiring).
+Create a secure, authenticated messaging and calling experience for teams.
 
-### Business problem solved
-Modern teams need fast, secure collaboration. Connectify reduces friction by enabling:
-- Instant messaging with unread counts, channel discovery, and direct messaging
-- Private/public channels with membership management
-- One-click video meetings initiated from chat
+## Scope
 
----
+- Implemented in this repository:
+  - Frontend React app with chat UI and call UI
+  - Backend Express API endpoint to issue Stream Chat tokens (protected)
+  - Clerk event-driven user synchronization via Inngest
+  - MongoDB persistence for users
+- Not implemented (explicitly not found in codebase):
+  - Any custom username/password auth flow
+  - A REST API beyond the chat token endpoint (only `/api/chat/token` is defined)
 
-## 2. Technology Stack
+## Main Functionalities
 
-### Frontend
-- **Framework**: React (v19) + Vite
-- **Routing**: `react-router` v7
-- **Auth**: Clerk (`@clerk/clerk-react`, `@clerk/clerk-react` UI)
-- **State / Server state**: `@tanstack/react-query`
-- **Real-time chat SDK**: `stream-chat-react`
-- **Real-time video SDK**: `@stream-io/video-react-sdk`
-- **HTTP client**: Axios (`axios` + custom instance)
-- **Notifications**: `react-hot-toast`
-- **Error reporting**: `@sentry/react`
-- **Styling**: Tailwind (via `@tailwindcss/vite`), plus component CSS (`src/index.css`, `src/styles/*`)
-- **Icons**: `lucide-react`
+1. Sign-in via Clerk (frontend route-based protection)
+2. Connect to Stream Chat using a token fetched from backend
+3. List channels (excluding DMs) and provide DM entry via user list
+4. Show a custom channel header with members, pinned messages, invite modal, and call initiation message
+5. Initiate Stream Video calls using a call URL
 
-### Backend
-- **Runtime**: Node.js (ESM)
-- **Framework**: Express
-- **Auth/Session middleware**: Clerk Express middleware (`@clerk/express`)
-- **Database**: MongoDB via Mongoose (`mongoose`)
-- **Authentication token strategy for Stream**: Stream Chat token created server-side using Stream API keys/secrets
-- **Real-time chat infrastructure**: `stream-chat` (server SDK)
-- **Event automation**: Inngest (`inngest/express` + `Inngest` functions)
-- **Error reporting**: `@sentry/node`
-- **CORS**: `cors`
-- **Environment management**: `dotenv`
+## Business Use Case
+
+A team can communicate in real-time using chat channels, create direct messages, and start calls from within the chat experience.
+
+## Target Audience
+
+Authenticated end-users inside teams.
+
+Project Screenshot Placeholder:
+
+[INSERT_PROJECT_OVERVIEW_SCREENSHOT_HERE]
 
 ---
 
-## 3. Features List (FULL — detected from code)
+# 3. TECHNOLOGY STACK
 
-### Authentication & access control
-- Frontend route gating using Clerk session state:
-  - `/` requires signed-in user; redirects signed-out users to `/auth`
-  - `/auth` is opposite-gated
-  - `/call/:id` requires signed-in user
-- Backend middleware `protectRoute` rejects unauthenticated requests with **401**.
+## Frontend
 
-### Real-time messaging (Stream Chat)
-- Client connects to Stream Chat using:
-  - Server-generated token from `GET /api/chat/token`
-  - Stream API key configured in `VITE_STREAM_API_KEY`
-- Channel list and chat UI:
-  - Channel list rendered via `ChannelList` (Stream React UI)
-  - Message UI via `MessageList`, `MessageInput`, and `Thread`
-- Unread count displayed in channel preview (`channel.countUnread()`)
-- Active channel selection stored in URL query param `channel`.
+| Area | Implemented Technology |
+|---|---|
+| Framework | React (Vite) |
+| Routing | react-router (v7) |
+| UI/Styling | TailwindCSS + custom CSS (stream-chat-theme.css, auth.css) |
+| State/Data Fetching | @tanstack/react-query |
+| Chat UI | stream-chat-react |
+| Video UI | @stream-io/video-react-sdk |
+| Auth UI | @clerk/clerk-react (UserButton + SignInButton) |
+| Icons | lucide-react |
+| Error Tracking | @sentry/react |
+| Notifications | react-hot-toast |
 
-### Channel management
-- Create channel modal (`CreateChannelModal`):
-  - Public channel creation (discoverable)
-  - Private channel creation (private visibility)
-  - Channel ID normalization/derivation from name:
-    - lowercase, whitespace to `-`, remove invalid characters, slice to 20
-- Member management:
-  - For public channels: auto-selects all users as initial members.
-  - For private channels: allows selecting members before creation.
-- Invite users to private channels (`InviteModal`):
-  - Fetches non-member users and calls `channel.addMembers(...)`.
-- Channel header actions (`CustomChannelHeader`):
-  - Member list modal
-  - Pinned messages modal
-  - Video call initiation
+Build tools:
 
-### Direct messages (DMs)
-- DMs created dynamically from selected user list:
-  - Channel ID derived by sorting two user IDs and joining with `-`, then slicing to 64.
-  - Members are set to both user IDs.
-- DM channel previews are hidden from the main channel list (`CustomChannelPreview` returns `null` for DM channels).
-- DM users list shows online indicator and unread count.
+- Vite config in `frontend/vite.config.js`
 
-### Pinning and pinned messages UI
-- Channel header fetches pinned messages using `channel.query()` and renders them in `PinnedMessagesModal`.
+## Backend
 
-### Video calling (Stream Video)
-- Video call page at `/call/:id`:
-  - Initializes `StreamVideoClient` using `VITE_STREAM_API_KEY` and Stream token
-  - Creates or joins call session: `videoClient.call("default", callId)` then `join({ create: true })`
-- In-call navigation behavior:
-  - When call state becomes `LEFT`, user is navigated back to `/`.
+| Area | Implemented Technology |
+|---|---|
+| Runtime | Node.js (Express) |
+| Framework | express (v5) |
+| Language / Module | ESM (`"type": "module"`) |
+| Auth | Clerk Express middleware (`clerkMiddleware`) |
+| Token issuance | Stream Chat SDK (`stream-chat`) |
+| Background/events | Inngest (`inngest/express` integration) |
+| DB | Mongoose (MongoDB) |
+| Error tracking | @sentry/node |
+| CORS | cors (with `origin: ENV.CLIENT_URL`, `credentials: true`) |
 
-### Inngest event automation (user lifecycle)
-- Inngest functions are defined for:
-  - `clerk/user.created`:
-    - Connect DB
-    - Create a MongoDB `User` record
-    - Upsert user in Stream and add to discoverable public channels
-  - `clerk/user.deleted`:
-    - Connect DB
-    - Delete `User` record
-    - Delete user from Stream
-- Inngest is mounted at `/api/inngest`.
+## Database
 
-### Observability
-- Sentry integration:
-  - Frontend Sentry initialized in `main.jsx`
-  - Backend Sentry error handler enabled via `Sentry.setupExpressErrorHandler(app)`
-- Backend debug route:
-  - `GET /debug-sentry` returns a plain text response.
+- Database Type: MongoDB
+- ORM/ODM: Mongoose
+- Storage Strategy:
+  - Users are stored in MongoDB via `User` model.
+
+## Authentication
+
+Detected authentication implementation:
+
+- **Clerk** for authentication
+- Backend uses `@clerk/express` middleware; authorization is based on `req.auth().isAuthenticated`.
+
+The backend does **not** implement custom JWT/auth logic; it issues Stream Chat tokens after Clerk auth.
+
+## DevOps & Deployment
+
+Detected deployment configuration:
+
+- Both frontend and backend include `vercel.json`.
+- Backend Vercel function routes all requests to `src/server.js`.
+
+No explicit CI/CD pipeline config is present in the repository files enumerated.
 
 ---
 
-## 4. Folder Structure Explanation
+# 4. FEATURES LIST
 
-### Backend: `backend/src/`
-- `server.js`
-  - Express app wiring: JSON parsing, CORS, Clerk middleware
-  - Routes:
-    - `/api/inngest` (Inngest express handler)
-    - `/api/chat` (chat token endpoint)
-  - Mongo connection and Sentry setup
-- `config/`
-  - `env.js`: Loads environment variables into `ENV`
-  - `inngest.js`: Defines Inngest functions for Clerk events
-  - `stream.js`: Stream Chat server SDK utilities
-- `DB/`
-  - `db.js`: MongoDB connection via `mongoose.connect(ENV.MONGO_URI)`
-- `models/`
-  - `user.model.js`: Mongoose `User` schema
-- `middleware/`
-  - `auth.middleware.js`: `protectRoute` middleware using Clerk auth state
-  - `chat.controller.js`: `getStreamToken` controller that calls Stream token generator
-- `routes/`
-  - `chat.route.js`: Express Router for `/api/chat/token`
+> Note: Features below are detected directly from code files.
 
-### Frontend: `frontend/src/`
-- `main.jsx`
-  - React root rendering
-  - ClerkProvider configuration
-  - React Query setup
-  - Sentry initialization
-- `App.jsx`
-  - Route definitions and redirects based on `useAuth().isSignedIn` / `isLoaded`
-- `providers/`
-  - `AuthProvider.jsx`: Installs Axios interceptor to attach `Authorization: Bearer <Clerk token>`
-- `lib/`
-  - `axios.js`: Axios instance with `VITE_API_BASE_URL` and `withCredentials: true`
-  - `api.js`: `getStreamToken()` calling `GET /chat/token`
-- `hooks/`
-  - `useStreamChat.js`: connects user to Stream Chat using server token
-- `pages/`
-  - `AuthPage.jsx`: sign-in landing page UI
-  - `HomePage.jsx`: chat UI (channel list, message window)
-  - `CallPage.jsx`: video call UI
-- `components/`
-  - `CreateChannelModal.jsx`: creates public/private channels
-  - `CustomChannelHeader.jsx`: header + actions (members/pins/invite/video call)
-  - `CustomChannelPreview.jsx`: channel preview (hidden for DMs)
-  - `InviteModal.jsx`: invites members to private channel
-  - `MembersModal.jsx`: modal listing channel members
-  - `PinnedMessagesModal.jsx`: modal listing pinned messages
-  - `UsersList.jsx`: user directory and DM initiation
-  - `CallContent.jsx`: Stream video call UI and navigation on leave
-  - `PageLoader.jsx`: loader UI (not inspected in this run)
+| Feature Name | Purpose | User Benefit | Related Components |
+|---|---|---|---|
+| Clerk-protected routing | Gate access to main pages by sign-in status | Users must sign in to use chat/call | `frontend/src/App.jsx`, `frontend/src/pages/AuthPage.jsx` |
+| Stream Chat token fetch | Obtain Stream Chat token from protected backend endpoint | Secure access to chat | `frontend/src/lib/api.js`, `backend/src/routes/chat.route.js`, `backend/src/middleware/auth.middleware.js` |
+| Stream Chat client connection | Connect user to Stream Chat using received token | Real-time messaging | `frontend/src/hooks/useStreamChat.js` |
+| Channel list with unread counts | Show channels where the user is a member | Quick navigation to active conversations | `frontend/src/pages/HomePage.jsx`, `frontend/src/components/CustomChannelPreview.jsx` |
+| Custom channel header actions | Show members count, pinned messages, invite, and call initiation | Rich in-channel controls | `frontend/src/components/CustomChannelHeader.jsx` |
+| Pinned messages modal | Display pinned messages for current channel | Fast retrieval of important content | `frontend/src/components/PinnedMessagesModal.jsx` |
+| Members modal | Show channel members | Understand conversation participants | `frontend/src/components/MembersModal.jsx` (exists; content not read in this session) |
+| Invite modal for private channels | Invite users in private channels | Expand private team communication | `frontend/src/components/InviteModal.jsx` (exists; content not read in this session) |
+| DM creation/listing | Start a direct message channel with selected user | One-to-one collaboration | `frontend/src/components/UsersList.jsx` |
+| Stream Video call page | Join video calls by call id | Video conversation without leaving app | `frontend/src/pages/CallPage.jsx`, `frontend/src/components/CallContent.jsx` (exists; content not read in this session) |
+| Inngest user sync | Sync Clerk users to MongoDB and Stream user | Persistent local user mapping and Stream access | `backend/src/config/inngest.js` |
+| MongoDB persistence for users | Store user fields in MongoDB | Enables app-level user records | `backend/src/models/user.model.js`, `backend/src/DB/db.js` |
+
+Feature Screenshot Placeholder:
+
+[INSERT_FEATURE_SCREENSHOT_HERE]
 
 ---
 
-## 5. System Architecture
+# 5. FOLDER STRUCTURE
 
-### Client-server architecture
-- **Client (Frontend)**
-  - Auth-managed using Clerk
-  - Requests Stream token from backend
-  - Uses Stream SDKs directly for real-time messaging/video
+## Repository Structure
 
-- **API Layer (Backend endpoints)**
-  - Provides Stream Chat token only through protected route
-
-- **Backend services (internal)**
-  - Stream token creation using server-side Stream credentials
-  - Mongo connection for user lifecycle (Inngest)
-  - Sentry error handling
-
-- **Database**
-  - MongoDB stores `User` records synchronized by Inngest events
-
-### Request lifecycle (high-level)
-1. User signs in via Clerk on the frontend.
-2. Frontend requests Stream token from `GET /api/chat/token`.
-3. Backend verifies authentication via Clerk middleware state.
-4. Backend generates Stream token using `streamClient.createToken(userId)`.
-5. Frontend connects to Stream Chat using Stream token.
-6. Real-time traffic flows directly through Stream services.
-
-### Data communication model
-- REST (Axios) for token retrieval.
-- WebSocket/realtime for chat and video, handled by Stream SDKs.
-
----
-
-## 6. DFD (Data Flow Diagram) Explanation
-
-### Level 0
-**Actors**
-- End user
-- Clerk identity provider
-- Connectify backend API
-- Stream Chat service
-- Stream Video service
-- MongoDB
-
-**High-level data exchange**
-- User → Clerk → Frontend authentication state
-- Frontend → Backend `/api/chat/token` for authorization bootstrap
-- Backend → Stream Chat token creation
-- Frontend → Stream Chat (connect, realtime messaging)
-- Frontend → Stream Video (call join, realtime media)
-- Clerk events → Inngest → MongoDB + Stream user provisioning
-
-### Level 1
-#### Authentication process
-- Frontend gets JWT-like token via Clerk (`getToken()`), adds it to Axios request headers.
-- Backend uses Clerk middleware auth state (`req.auth().isAuthenticated`) to allow/deny token endpoint access.
-
-#### CRUD operations
-- MongoDB CRUD is performed by Inngest functions:
-  - Create: `User.create(newUser)` on `clerk/user.created`
-  - Delete: `User.deleteOne({ clerkId: id })` on `clerk/user.deleted`
-- Stream user CRUD is performed in the same Inngest flows:
-  - Upsert user
-  - Delete user
-
-#### Data processing flow
-- Token generation flow:
-  - userId derived from Clerk session in request (`requestAnimationFrame.auth().userId`)
-  - Stream token generated by `generateStreamToken(userId)`
-
----
-
-## 7. ERD (Entity Relationship Diagram) Explanation
-
-### Entities detected
-1. **User** (`backend/src/models/user.model.js`)
-   - Fields:
-     - `email`: String (unique, required)
-     - `name`: String (required)
-     - `image`: String (required)
-     - `clerkId`: String (unique, required)
-     - `timestamps`: createdAt / updatedAt (enabled by `{ timestamps: true }`)
-
-### Relationships
-- The codebase does not define explicit relational models beyond the `User` collection.
-- Relationship logic exists conceptually:
-  - `User` represents a mapping between `clerkId` and Stream user ID.
-  - Stream channels and Stream DMs exist in Stream’s own datastore (not modeled as Mongo collections in this repo).
+```text
+Connectify/
+├── PROJECT_DOCUMENTATION.md
+├── backend/
+│   ├── instrument.mjs
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vercel.json
+│   └── src/
+│       ├── server.js
+│       ├── config/
+│       │   ├── env.js
+│       │   ├── inngest.js
+│       │   └── stream.js
+│       ├── DB/
+│       │   └── db.js
+│       ├── middleware/
+│       │   ├── auth.middleware.js
+│       │   └── chat.controller.js
+│       ├── models/
+│       │   └── user.model.js
+│       └── routes/
+│           └── chat.route.js
+└── frontend/
+    ├── README.md
+    ├── eslint.config.js
+    ├── index.html
+    ├── package.json
+    ├── package-lock.json
+    ├── public/
+    │   ├── auth-i.png
+    │   ├── logo.png
+    │   ├── slack-logo.png
+    │   └── vite.svg
+    ├── vercel.json
+    ├── vite.config.js
+    └── src/
+        ├── App.jsx
+        ├── index.css
+        ├── main.jsx
+        ├── components/
+        │   ├── CallContent.jsx
+        │   ├── ChannelListError.jsx
+        │   ├── ChannelListLoading.jsx
+        │   ├── CreateChannelModal.jsx
+        │   ├── CustomChannelHeader.jsx
+        │   ├── CustomChannelPreview.jsx
+        │   ├── EmptyChannelState.jsx
+        │   ├── InviteModal.jsx
+        │   ├── MembersModal.jsx
+        │   ├── MobileSidebar.jsx
+        │   ├── PageLoader.jsx
+        │   ├── PinnedMessagesModal.jsx
+        │   └── UsersList.jsx
+        ├── hooks/
+        │   └── useStreamChat.js
+        ├── lib/
+        │   ├── api.js
+        │   └── axios.js
+        ├── pages/
+        │   ├── AuthPage.jsx
+        │   ├── CallPage.jsx
+        │   └── HomePage.jsx
+        ├── providers/
+        │   └── AuthProvider.jsx
+        └── styles/
+            ├── auth.css
+            └── stream-chat-theme.css
+```
 
 ---
 
-## 8. SECURITY ARCHITECTURE
+# 6. SYSTEM ARCHITECTURE
 
-### Authentication mechanism
-- **Clerk**
-  - Frontend uses `ClerkProvider`.
-  - Protected backend endpoint uses Clerk Express middleware.
+## Architecture Pattern
 
-### Authorization
-- Backend endpoint `/api/chat/token` is protected by `protectRoute`:
-  - If `req.auth().isAuthenticated` is false → return **401 Unauthorized**.
+- Frontend-driven real-time UI using Stream SDKs
+- Backend focused on:
+  - Authentication middleware (Clerk)
+  - Token generation endpoint for Stream Chat
+  - Event handling endpoint for Inngest
+  - MongoDB user persistence
 
-### Protected routes
-- `GET /api/chat/token`
-  - Middleware: `protectRoute`
+## Request Lifecycle (High-Level)
 
-### Password encryption
-- No password handling exists in this codebase.
-- Authentication is delegated entirely to Clerk.
+```text
+User Browser
+   │
+   ▼
+Frontend (Stream Chat/Video SDK)
+   │
+   ▼
+GET /api/chat/token (Clerk-protected)
+   │
+   ▼
+Backend middleware:
+  - Clerk auth check
+  - Stream token generation
+   │
+   ▼
+Stream token returned to Frontend
+   │
+   ▼
+Stream SDK connects user and begins real-time messaging/video
+```
 
-### Middleware validation
-- `protectRoute` checks Clerk auth state and blocks unauthorized access.
+## Data Flow
 
-### Token management strategy
-- **Stream Chat token**
-  - Generated server-side using Stream secret credentials.
-  - Returned to frontend as `{ token }`.
-  - Frontend uses token to call `client.connectUser(user, token)`.
-
-### Cookie / credential handling
-- Axios instance sets `withCredentials: true` on the frontend.
-- Backend CORS enables `credentials: true` and restricts origin to `ENV.CLIENT_URL`.
-
----
-
-## 9. JWT AUTH FLOW (Diagram Explanation)
-
-> Note: In this codebase, “JWT” terminology refers to the token produced by Clerk (`getToken()`), while the backend returns a **Stream Chat token**.
-
-### Step-by-step flow
-1. **Login request**
-   - User signs in using Clerk UI on `/auth`.
-2. **Credential validation**
-   - Performed by Clerk (not implemented in this repository).
-3. **JWT generation**
-   - Frontend uses `useAuth().getToken()` to obtain a Clerk token.
-4. **Token returned**
-   - Clerk returns token to the frontend.
-5. **Storage (cookie/localStorage)**
-   - Storage mechanism is managed by Clerk SDK (repo does not directly store the token).
-6. **Protected API request**
-   - Frontend calls `GET /chat/token` via Axios.
-   - `AuthProvider` interceptor attaches `Authorization: Bearer <Clerk token>`.
-7. **JWT verification middleware**
-   - Backend `protectRoute` checks `req.auth().isAuthenticated`.
-8. **Access granted/denied**
-   - Granted: backend generates Stream Chat token.
-   - Denied: backend returns `401`.
-
-### Text diagram
-User → Clerk Sign-In → Frontend (`getToken()`) → Backend `/api/chat/token` → protectRoute (Clerk auth check) → Stream token generated → Response `{ token }` → Frontend stores token in memory usage → Stream SDK connects → Protected realtime messaging
-
-### Token expiration
-- The codebase does not explicitly define expiration behavior.
-- Stream token creation and Clerk token expiration are handled by their respective SDKs/servers.
-
-### Security risks handled
-- Backend does not expose Stream secrets to the client.
-- Backend endpoint is protected by Clerk middleware.
-
-### Why middleware is needed
-- Prevents unauthenticated users from generating Stream tokens.
+- Clerk auth state determines whether frontend can access chat/call pages.
+- Frontend calls backend to retrieve a Stream Chat token.
+- Stream token is used by Stream Chat React SDK to connect and render channel/message UI.
 
 ---
 
-## 10. APPLICATION FLOW (STEPWISE)
+# 7. DATABASE DESIGN
 
-### App startup
-1. Frontend bootstraps in `main.jsx`.
-2. ClerkProvider is initialized using `VITE_CLERK_PUBLISHABLE_KEY`.
-3. QueryClientProvider mounts React Query.
-4. AuthProvider installs an Axios request interceptor that attaches Clerk tokens.
-5. Sentry is initialized.
+## User Model (MongoDB via Mongoose)
 
-### Route loading
-6. In `App.jsx`, routes are resolved based on `useAuth()` state:
-   - If signed in → `/` and `/call/:id` render app pages.
-   - If signed out → redirect to `/auth`.
+File: `backend/src/models/user.model.js`
 
-### Authentication check
-7. `HomePage` and `CallPage` rely on `useUser()` and `useAuth()` readiness to fetch tokens.
+| Field | Type | Constraints | Purpose |
+|---|---|---|---|
+| email | String | required, unique | User email |
+| name | String | required | Display name |
+| image | String | required | Avatar URL |
+| clerkId | String | required, unique | Clerk user id mapping |
+| timestamps | Mongoose timestamps | auto | createdAt/updatedAt |
 
-### API request cycle (Stream token)
-8. `useStreamChat` (HomePage) uses React Query to call `getStreamToken()`:
-   - `GET /chat/token` (Axios)
-   - Query enabled when `user?.id` is available.
+Relationships:
 
-9. Backend `GET /api/chat/token`:
-   - Clerk auth check via `protectRoute`
-   - Token generation via `generateStreamToken(userId)`
-   - Response: `{ token }`
-
-### State update and rendering
-10. Frontend receives token:
-   - StreamChat client connects using `connectUser(...)`.
-   - UI renders Stream `Chat` component with channel list and message views.
-
-### Video rendering flow (CallPage)
-11. `CallPage` fetches token similarly via React Query.
-12. On successful token retrieval, it creates a `StreamVideoClient` and joins the call with `create: true`.
-13. `CallContent` monitors call state and navigates back to home on leave.
-
-### Database update lifecycle
-14. MongoDB and Stream user provisioning occur asynchronously via Inngest when Clerk emits:
-   - `clerk/user.created`
-   - `clerk/user.deleted`
+- No explicit relationships are defined in MongoDB models in this repository.
 
 ---
 
-## 11. BACKEND INTERNAL FLOW
+# 8. ENTITY RELATIONSHIP DIAGRAM (ERD)
 
-Route → Middleware → Controller → Service → Model → Database → Response
-
-### For `GET /api/chat/token`
-1. **Route**: `backend/src/routes/chat.route.js`
-   - `router.get('/token', protectRoute, getStreamToken)`
-2. **Middleware**: `protectRoute`
-   - blocks if not authenticated
-3. **Controller**: `backend/src/middleware/chat.controller.js`
-   - calls `generateStreamToken(requestAnimationFrame.auth().userId)`
-4. **Service**: `backend/src/config/stream.js`
-   - calls `streamClient.createToken(userIdString)`
-5. **Response**
-   - returns JSON `{ token }`
-
-### Inngest flows (user provisioning)
-Route/trigger (event) → connectDB → model operations → stream operations
-- `clerk/user.created`:
-  - `User.create(newUser)`
-  - `upsertStreamUser(...)`
-  - `addUserToPublicChannels(...)`
-- `clerk/user.deleted`:
-  - `User.deleteOne({ clerkId: id })`
-  - `deleteStreamUser(id)`
+```text
+Users
+├── email (unique, required)
+├── name (required)
+├── image (required)
+└── clerkId (unique, required)
+```
 
 ---
 
-## 12. FRONTEND INTERNAL FLOW
+# 9. SECURITY ARCHITECTURE
 
-App entry point → Routing → State management → API integration → Component hierarchy
+## Implemented Security Measures (Detected)
 
-### Entry point
-- `frontend/src/main.jsx`
-  - initializes providers: Clerk, Router, React Query, AuthProvider
+1. Authentication (Clerk)
+   - Backend uses `clerkMiddleware()`.
+   - Protected route checks `req.auth().isAuthenticated`.
 
-### Routing
-- `frontend/src/App.jsx`
-  - redirects based on `isSignedIn` and `isLoaded`
+2. Protected API endpoint
+   - Only `/api/chat/token` is protected by `protectRoute`.
 
-### State management & API integration
-- `frontend/src/providers/AuthProvider.jsx`
-  - installs Axios interceptor adding `Authorization` header with Clerk token
-- `frontend/src/hooks/useStreamChat.js`
-  - fetches Stream token via React Query (`getStreamToken()`)
-  - connects user to Stream Chat and sets `chatClient`
+3. CORS restrictions
+   - Backend allows `origin: ENV.CLIENT_URL` and `credentials: true`.
 
-### Component hierarchy (Home)
-- `HomePage`
-  - `Chat` (Stream)
-    - Left sidebar
-      - `ChannelList`
-      - Custom preview: `CustomChannelPreview`
-      - DM directory: `UsersList`
-    - Main chat area
-      - `Channel` (active channel from URL)
-        - `Window`
-          - `CustomChannelHeader`
-          - `MessageList`
-          - `MessageInput`
-        - `Thread`
-    - `CreateChannelModal` conditional
+## Token Strategy
 
-### Component hierarchy (Call)
-- `CallPage`
-  - `StreamVideo` → `StreamCall` → `CallContent`
+- The backend does not issue a custom JWT to the frontend.
+- The backend issues **Stream Chat tokens** via `streamClient.createToken(userIdString)`.
+- Token generation depends on the authenticated Clerk user id.
+
+## Authorization
+
+- Authorization is binary in the codebase: authenticated vs not authenticated.
+- No role-based authorization logic is present.
+
+## Validation
+
+- Request validation for `/api/chat/token` is not implemented (endpoint uses only auth context).
+
+## Encryption
+
+- No explicit encryption logic is in the repository code.
+- Encryption is delegated to TLS/HTTPS in deployment.
 
 ---
 
-## 13. API DOCUMENTATION (Analyzed from backend routes)
+# 10. AUTHENTICATION FLOW
 
-### Base URL and prefixes
-- Backend mounts chat routes under: `/api/chat`
-- Frontend calls `/chat/token` relative to `VITE_API_BASE_URL`.
+Detected: **Clerk authentication + backend-protected token issuance for Stream Chat**.
 
-### API endpoint table
-
-| Method | Endpoint | Description | Auth Required | Request Body | Response |
-| ------ | -------- | ----------- | ------------- | ------------ | -------- |
-| GET | `/api/chat/token` | Generate Stream Chat token for the authenticated Clerk user | Yes | None | `{ token }` |
-
-### Endpoint details
-
-#### Endpoint: Generate Stream Token
-- **Purpose**: Provide Stream Chat token so the frontend can connect via Stream Chat SDK.
-- **HTTP Method**: GET
-- **Route Path**: `/api/chat/token` (implemented as `router.get('/token', ...)` mounted at `/api/chat`)
-- **Auth required**: Yes
-- **Middleware used**: `protectRoute`
-
-**Request**
-- URL params: none
-- Query params: none
-- Headers:
-  - `Authorization: Bearer <Clerk token>` attached by Axios interceptor
-
-**Response**
-- Success (200):
-  ```json
-  { "token": "<stream_token>" }
-  ```
-- Error (401):
-  ```json
-  { "message": "Unauthorized - you must be logged in" }
-  ```
-- Error (500):
-  ```json
-  { "error": "<error message>" }
-  ```
-
-**Flow**
-- Route (`chat.route.js`) → Middleware (`auth.middleware.js`) → Controller (`chat.controller.js`) → Service (`stream.js`) → Response
+```text
+User
+  │
+  ▼
+Frontend (Clerk) sign-in
+  │
+  ▼
+GET /api/chat/token
+  │
+  ▼
+Backend: Clerk middleware attaches req.auth()
+  │
+  ▼
+protectRoute checks req.auth().isAuthenticated
+  │
+  ▼
+Generate Stream Chat token using req.auth().userId
+  │
+  ▼
+Return { token } to frontend
+  │
+  ▼
+Frontend connects to Stream Chat with token
+```
 
 ---
 
-## 14. Dependencies Installation
+# 11. APPLICATION FLOW
 
-### Backend Setup
-1. `cd backend`
-2. `npm install`
-3. Create/verify `.env`:
-   - `PORT`
-   - `MONGO_URI`
-   - `NODE_ENV`
-   - `CLERK_PUBLISHABLE_KEY`
-   - `CLERK_SECRET_KEY`
-   - `STREAM_API_KEY`
-   - `STREAM_API_SECRET`
-   - `SENTRY_DSN`
-   - `INNGEST_EVENT_KEY`
-   - `INNGEST_SIGNING_KEY`
-   - `CLIENT_URL`
-4. `npm run dev`
+Detected for the authenticated chat experience.
 
-Important backend dependencies (from `backend/package.json`):
-- `express`, `cors`, `mongoose`
-- `@clerk/express`
-- `stream-chat`
-- `inngest`
-- `@sentry/node`, `dotenv`, `cross-env`, `nodemon`
-
-### Frontend Setup
-1. `cd frontend`
-2. `npm install`
-3. Create/verify `.env` for Vite:
-   - `VITE_API_BASE_URL`
-   - `VITE_CLERK_PUBLISHABLE_KEY`
-   - `VITE_SENTRY_DSN`
-   - `VITE_STREAM_API_KEY`
-4. `npm run dev`
-
-Main frontend dependencies (from `frontend/package.json`):
-- `react`, `react-dom`, `react-router`
-- `@clerk/clerk-react`, `@sentry/react`
-- `@tanstack/react-query`, `axios`
-- `stream-chat`, `stream-chat-react`, `@stream-io/video-react-sdk`
-- `react-hot-toast`, `lucide-react`, `tailwindcss` tooling
+```text
+App Start
+   │
+   ▼
+Load React routes (App.jsx)
+   │
+   ▼
+If signed in:
+  - Render HomePage
+If not signed in:
+  - Render AuthPage
+   │
+   ▼
+HomePage initializes Stream Chat
+   │
+   ▼
+Fetch Stream token from backend (/api/chat/token)
+   │
+   ▼
+Connect Stream Chat client
+   │
+   ▼
+Render channel list and selected channel window
+   │
+   ▼
+User interacts (select channel, open modals)
+   │
+   ▼
+Stream provides real-time messages
+```
 
 ---
 
-## 15. Environment Variables
+# 12. BACKEND INTERNAL FLOW
 
-### Backend environment variables (`backend/src/config/env.js`)
-- `PORT` (default: 5001)
-- `MONGO_URI`
-- `NODE_ENV`
-- `CLERK_PUBLISHABLE_KEY`
-- `CLERK_SECRET_KEY`
-- `STREAM_API_KEY`
-- `STREAM_API_SECRET`
-- `SENTRY_DSN`
-- `INNGEST_EVENT_KEY`
-- `INNGEST_SIGNING_KEY`
-- `CLIENT_URL`
+## Token Endpoint Flow
 
-### Frontend environment variables (Vite imports)
-- `VITE_API_BASE_URL`
-- `VITE_CLERK_PUBLISHABLE_KEY`
-- `VITE_SENTRY_DSN`
-- `VITE_STREAM_API_KEY`
-
-> The repo references these names directly; exact values and additional `.env` entries are not enumerated beyond usage in code.
+```text
+Request: GET /api/chat/token
+  │
+  ▼
+Clerk middleware (clerkMiddleware)
+  │
+  ▼
+protectRoute (auth check)
+  │
+  ▼
+getStreamToken (Stream token generation)
+  │
+  ▼
+Response: { token }
+```
 
 ---
 
-## 16. How To Run Project
+# 13. FRONTEND INTERNAL FLOW
 
-### Run backend
-1. Open terminal.
-2. `cd backend`
-3. Install dependencies: `npm install`
-4. Start dev server: `npm run dev`
+## Home Page Flow
 
-Expected behavior:
-- Express app starts on `ENV.PORT` when not in production.
-- MongoDB connection is established before listening.
-
-### Run frontend
-1. In a new terminal:
-2. `cd frontend`
-3. Install dependencies: `npm install`
-4. Start dev server: `npm run dev`
-
-Expected behavior:
-- User visits the frontend.
-- If signed out, redirects to `/auth`.
-- If signed in, connects to Stream via backend token endpoint.
-
----
-
-## 17. Runtime Flow (After Startup)
-
-1. Frontend loads and initializes Clerk + Sentry.
-2. AuthProvider installs Axios interceptor.
-3. User signs in (Clerk).
-4. HomePage renders.
-5. `useStreamChat` fetches Stream token by calling `GET /api/chat/token`.
-6. Backend validates authentication and generates Stream token.
-7. Frontend connects to Stream Chat; real-time messages load.
-8. Users can:
-   - create channels
-   - invite members
-   - start DMs
-   - start video calls, which navigates to `/call/:id`
-9. In background, Inngest provisions and synchronizes Stream users on Clerk user lifecycle events.
+```text
+Entry Point: App.jsx
+   │
+   ▼
+HomePage.jsx
+   │
+   ▼
+useStreamChat hook
+   │
+   ▼
+react-query -> getStreamToken() -> backend /api/chat/token
+   │
+   ▼
+StreamChat.connectUser()
+   │
+   ▼
+Render Stream Chat components:
+  - ChannelList
+  - Channel + Window
+  - Thread
+```
 
 ---
 
-## 18. Common Errors & Fixes
+# 14. API DOCUMENTATION
 
-### Frontend: Stream token fails
-- Symptom: chat UI stuck loading / shows `Something went wrong...`
-- Possible causes:
-  - `VITE_API_BASE_URL` misconfigured
-  - Backend CORS origin mismatch with `ENV.CLIENT_URL`
-  - Unauthenticated request to `/api/chat/token`
-- Fix:
-  - Verify `VITE_API_BASE_URL` points to backend (including scheme/port)
-  - Ensure `CLIENT_URL` in backend `.env` matches the frontend origin
-  - Confirm Clerk session is loaded (`isLoaded`) before token request
+Detected APIs from repository.
 
-### Backend: MongoDB connection failure
-- Symptom: backend process exits on startup
-- Possible causes:
-  - `MONGO_URI` incorrect or unreachable
-- Fix:
-  - Validate MongoDB URI and network access
+## Endpoint Summary
 
-### Backend: CORS errors
-- Symptom: browser blocks requests
-- Fix:
-  - Set `CLIENT_URL` properly in `backend/.env`
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| GET | `/api/chat/token` | Generates and returns a Stream Chat token for the authenticated Clerk user | Yes |
 
-### Stream token generation errors
-- Symptom: server responds 500 with `{ error: ... }`
-- Fix:
-  - Validate `STREAM_API_KEY` and `STREAM_API_SECRET`
+## Endpoint Details
 
-### Inngest not working
-- Symptom: users not created/synced into Mongo/Stream
-- Fix:
-  - Validate `INNGEST_EVENT_KEY` and `INNGEST_SIGNING_KEY`
-  - Ensure Inngest endpoint is reachable at `/api/inngest`
+### Endpoint Name
+
+- `Get Stream Chat Token`
+
+| Property | Value |
+|---|---|
+| Method | GET |
+| Endpoint | `/api/chat/token` |
+| Auth Required | Yes (Clerk) |
+| Request Body | None |
+| Query Parameters | None |
+
+#### Internal Flow
+
+```text
+Route (chat.route.js)
+  │
+  ▼
+Middleware: protectRoute (auth.middleware.js)
+  │
+  ▼
+Controller: getStreamToken (middleware/chat.controller.js)
+  │
+  ▼
+Stream token generation (config/stream.js)
+  │
+  ▼
+Response: { token }
+```
+
+#### Success Response
+
+```json
+{
+  "token": "<stream-chat-token>"
+}
+```
+
+#### Error Response
+
+```json
+{
+  "message": "Unauthorized - you must be logged in"
+}
+```
+
+or
+
+```json
+{
+  "error": "<error-message>"
+}
+```
 
 ---
 
-## 19. Developer Notes
+# 15. THIRD-PARTY INTEGRATIONS
 
-### Scalability improvements
-- Cache Stream token requests per session if token lifespan allows (reduce token endpoint load).
-- Add pagination/limits for user queries and channel discovery where appropriate.
+Detected integrations:
 
-### Performance suggestions
-- `UsersList` uses React Query with `staleTime: 5 minutes` (good baseline). Consider:
-  - reducing query frequency under slow networks
-  - memoizing derived channelId computations
-- Consider debouncing channel search inputs (not present in current code; only channel creation exists).
+| Integration | Where Used | Purpose |
+|---|---|---|
+| Clerk | Backend + Frontend | Authentication and auth context |
+| Stream Chat | Frontend + Backend | Real-time messaging + token issuance |
+| Stream Video | Frontend | Video calling UI and join logic |
+| Inngest | Backend | Event-driven sync triggered by Clerk user events |
+| Sentry | Frontend + Backend | Error tracking |
+| MongoDB/Mongoose | Backend | Persist user records |
+| TailwindCSS | Frontend | Styling foundation |
 
-### Security improvements
-- Ensure backend CORS is strictly configured to match the production frontend URL.
-- Standardize error payloads and avoid returning raw `error.message` from 500 in production.
+Integration flow details (verified):
+
+1. Clerk user created event triggers Inngest function `sync-user`.
+2. In that function:
+   - MongoDB `User` record is created.
+   - Stream user is upserted via `upsertStreamUser()`.
+   - User is added to discoverable channels via `addUserToPublicChannels()`.
 
 ---
 
-Author: Yash Lagare
+# 16. ENVIRONMENT VARIABLES
+
+Detected environment variables in backend (`backend/src/config/env.js`).
+
+| Variable | Purpose | Required |
+|---|---|---|
+| PORT | Backend server port | Optional (default 5001) |
+| MONGO_URI | MongoDB connection string | Required (connectDB uses ENV.MONGO_URI) |
+| NODE_ENV | Environment name for Sentry | Optional |
+| CLERK_PUBLISHABLE_KEY | Clerk frontend config (not directly used in backend code shown) | Optional/Unknown |
+| CLERK_SECRET_KEY | Clerk backend auth secret (used implicitly by Clerk middleware) | Required for auth |
+| STREAM_API_KEY | Stream Chat token generation | Required |
+| STREAM_API_SECRET | Stream Chat token generation | Required |
+| SENTRY_DSN | Sentry configuration | Optional (used by Sentry.init) |
+| INNGEST_EVENT_KEY | Inngest event key (configured in inngest.js usage) | Optional/Unknown |
+| INNGEST_SIGNING_KEY | Inngest signing key | Optional/Unknown |
+| CLIENT_URL | Allowed CORS origin | Required for CORS |
+
+Environment variables for frontend are referenced as Vite env variables:
+
+| Variable | Purpose | Required |
+|---|---|---|
+| VITE_API_BASE_URL | Axios base URL | Required (used by axios instance) |
+| VITE_STREAM_API_KEY | Stream Video API key and Stream Chat usage | Required (used in hooks/pages) |
+
+Environment variable example:
+
+```env
+MONGO_URI=
+CLERK_SECRET_KEY=
+STREAM_API_KEY=
+STREAM_API_SECRET=
+CLIENT_URL=
+VITE_API_BASE_URL=
+VITE_STREAM_API_KEY=
+SENTRY_DSN=
+```
+
+---
+
+# 17. DEPENDENCIES
+
+## Frontend Dependencies
+
+Major packages (detected from `frontend/package.json`):
+
+| Package | Purpose |
+|---|---|
+| react / react-dom | UI |
+| vite | Build tool |
+| stream-chat / stream-chat-react | Messaging UI and client |
+| stream-chat-react | Stream Chat React components |
+| @stream-io/video-react-sdk | Video call UI |
+| @clerk/clerk-react | Auth UI + hooks |
+| @sentry/react | Frontend error tracking |
+| @tanstack/react-query | Data fetching/caching |
+| axios | API requests |
+| tailwindcss + @tailwindcss/vite | Styling |
+| framer-motion | Animations |
+| lucide-react | Icons |
+| react-router | Routing |
+| react-hot-toast | Notifications |
+
+## Backend Dependencies
+
+Major packages (detected from `backend/package.json`):
+
+| Package | Purpose |
+|---|---|
+| express | Backend server |
+| @clerk/express | Clerk middleware |
+| cors | CORS config |
+| dotenv | Env loading |
+| mongoose | MongoDB ODM |
+| stream-chat | Stream token generation and Stream user management |
+| inngest | Inngest event functions |
+| @sentry/node | Backend error tracking |
+| cross-env / nodemon | Dev tooling |
+
+---
+
+# 18. INSTALLATION GUIDE
+
+> Commands assume Node.js is installed.
+
+## 1) Backend Setup
+
+```bash
+cd backend
+npm install
+```
+
+Create environment variables required by the backend (at least):
+
+```env
+MONGO_URI=
+CLERK_SECRET_KEY=
+STREAM_API_KEY=
+STREAM_API_SECRET=
+CLIENT_URL=
+SENTRY_DSN=
+```
+
+Run the backend in development:
+
+```bash
+npm run dev
+```
+
+## 2) Frontend Setup
+
+```bash
+cd frontend
+npm install
+```
+
+Create environment variables for the frontend (Vite):
+
+```env
+VITE_API_BASE_URL=http://localhost:5001
+VITE_STREAM_API_KEY=
+```
+
+Run the frontend:
+
+```bash
+npm run dev
+```
+
+---
+
+# 19. DEPLOYMENT GUIDE
+
+Detected deployment environment: Vercel.
+
+## Backend Hosting
+
+- Backend has `backend/vercel.json` routing all routes to `src/server.js` using `@vercel/node`.
+
+## Frontend Hosting
+
+- Frontend has `frontend/vercel.json`.
+
+## Environment Configuration
+
+- Configure backend env vars (MongoDB, Clerk, Stream, Sentry, CORS).
+- Configure frontend Vite env vars (API base URL and Stream API key).
+
+Production build process (frontend):
+
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+# 20. RUNTIME FLOW
+
+```text
+Request
+   │
+   ▼
+Express Middleware
+   │
+   ├─ Clerk middleware
+   │
+   ├─ CORS handling
+   │
+   ▼
+Authentication Checks (protectRoute)
+   │
+   ▼
+Business Logic
+   │
+   └─ Generate Stream Chat token
+   ▼
+Database (MongoDB only on Inngest functions)
+   ▼
+Response
+```
+
+---
+
+# 21. CHALLENGES & LEARNINGS
+
+## Technical Challenges (Detected/Implied by Code)
+
+- Multi-provider integration (Clerk + Stream Chat + Stream Video)
+- Secure token issuance for Stream Chat based on authenticated user context
+- Keeping user identity consistent between Clerk and Stream (upsert via Inngest)
+
+## Solutions Implemented
+
+- Clerk middleware for auth context
+- Protected token endpoint `/api/chat/token`
+- Inngest functions to sync Clerk user creation/deletion to MongoDB and Stream
+
+## Key Learnings
+
+- Real-time SDKs rely on short-lived capabilities; backend token generation is essential.
+
+---
+
+# 22. COMMON ERRORS & TROUBLESHOOTING
+
+## Installation Errors
+
+- If dependency install fails, ensure Node.js version is compatible with package.json.
+
+## Environment Variable Issues
+
+- If Stream connections fail, verify:
+  - `STREAM_API_KEY`, `STREAM_API_SECRET`
+  - frontend `VITE_STREAM_API_KEY`
+- If `/api/chat/token` returns 401:
+  - Ensure Clerk sign-in is complete and `CLIENT_URL` CORS matches frontend origin.
+
+## Authentication Issues
+
+- If token generation fails:
+  - Check backend `CLERK_SECRET_KEY`.
+
+---
+
+# 23. PERFORMANCE ANALYSIS
+
+## Current Optimizations (Detected)
+
+- React Query controls token fetch with `enabled: !!user?.id`.
+- Token fetch is cached by query key `['streamToken']`.
+
+## Potential Bottlenecks
+
+- Stream Chat token generation on every query (depends on caching strategy and query key behavior).
+- Inngest sync iterates over discoverable public channels and adds members (may increase event processing time with large channel counts).
+
+## Scalability Considerations
+
+- Token endpoint is lightweight but relies on Stream SDK calls.
+- Inngest `addUserToPublicChannels` scales with number of discoverable channels.
+
+---
+
+# 24. SECURITY REVIEW
+
+## Existing Security Measures
+
+- Clerk middleware and `protectRoute` ensure only authenticated users can access Stream token endpoint.
+- Backend CORS is restricted to `ENV.CLIENT_URL`.
+
+## Security Risks (Based on Code)
+
+- Authorization is only “authenticated vs not”; no finer-grained permissions.
+- Error responses sometimes return raw error messages (`res.status(500).json({ error: error.message })`).
+
+## Recommended Improvements
+
+- Replace raw error message with generic error in production.
+- Consider adding rate limiting to token endpoint.
+- Add role/permission checks if multiple channel types require access control.
+
+---
+
+# 25. FUTURE ENHANCEMENTS
+
+Realistic improvements based on current architecture:
+
+1. Add backend endpoints for managing channels/members explicitly (if needed) rather than relying purely on Stream SDK client behaviors.
+2. Add more granular authorization (e.g., per-channel private access) if required.
+3. Add caching for Stream token issuance.
+4. Implement logging around Inngest performance and Stream user management.
+
+---
+
+# 26. DEVELOPER NOTES
+
+## Architecture Decisions (Detected)
+
+- Backend is intentionally minimal and focuses on protected token issuance.
+- Identity mapping strategy:
+  - Clerk user id (`clerk/user.created`) is persisted to MongoDB and used as Stream user id.
+
+## Maintainability Notes
+
+- The codebase uses ESM and modern JS.
+- Frontend uses modular components for modals and custom channel rendering.
+
+## Refactoring Opportunities (Based on Detected Code)
+
+- `AuthProvider.jsx` sets up an axios interceptor but does not appear to provide useful value to children context (AuthContext value is `{}`). If not required, it can be simplified.
+- The token endpoint uses middleware filename `chat.controller.js` but exports `getStreamToken` used as controller.
+
+## Technical Debt Observations
+
+- Some files exist but were not read in this session (e.g., `CreateChannelModal.jsx`, `MembersModal.jsx`, `InviteModal.jsx`, `CallContent.jsx`). Any documentation sections referencing their behavior are limited to what was detected in files read.
+
+---
+
+Final Line:
+
+Written by Yash Lagare
+
