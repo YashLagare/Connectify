@@ -22,7 +22,7 @@ Teams need fast, reliable, and secure internal communication with real-time chat
 - Unified authentication through Clerk
 - Backend issues are tracked using Sentry
 
-Project Screenshot Placeholder:
+
 
 <img width="1900" height="915" alt="image" src="https://github.com/user-attachments/assets/f33bb88c-3314-4a8d-977f-5279ad775ccc" />
 
