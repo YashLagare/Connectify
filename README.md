@@ -118,11 +118,6 @@ A team can communicate in real-time using chat channels, create direct messages,
 ## Target Audience
 
 Authenticated end-users inside teams.
-
-Project Screenshot Placeholder:
-
-[INSERT_PROJECT_OVERVIEW_SCREENSHOT_HERE]
-
 ---
 
 # 3. TECHNOLOGY STACK
@@ -205,10 +200,6 @@ No explicit CI/CD pipeline config is present in the repository files enumerated.
 | Stream Video call page | Join video calls by call id | Video conversation without leaving app | `frontend/src/pages/CallPage.jsx`, `frontend/src/components/CallContent.jsx` (exists; content not read in this session) |
 | Inngest user sync | Sync Clerk users to MongoDB and Stream user | Persistent local user mapping and Stream access | `backend/src/config/inngest.js` |
 | MongoDB persistence for users | Store user fields in MongoDB | Enables app-level user records | `backend/src/models/user.model.js`, `backend/src/DB/db.js` |
-
-Feature Screenshot Placeholder:
-
-[INSERT_FEATURE_SCREENSHOT_HERE]
 
 ---
 
