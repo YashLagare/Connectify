@@ -35,7 +35,7 @@ Teams need fast, reliable, and secure internal communication with real-time chat
 
 Provide a web-based workspace for real-time team messaging (channels + DMs + pinned messages) and initiating video calls.
 
-## Core Features (Detected)
+## Core Features
 
 - Authentication-gated UI using Clerk (frontend route protection)
 - Stream Chat integration:
@@ -183,8 +183,6 @@ No explicit CI/CD pipeline config is present in the repository files enumerated.
 ---
 
 # 4. FEATURES LIST
-
-> Note: Features below are detected directly from code files.
 
 | Feature Name | Purpose | User Benefit | Related Components |
 |---|---|---|---|
