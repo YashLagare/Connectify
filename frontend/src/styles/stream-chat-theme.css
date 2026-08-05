@@ -1408,5 +1408,30 @@
   }
 }
 
+/* Clerk UserButton Popover Card & Overflow Clipping Fixes */
+.user-button-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 100;
+}
+
+.cl-userButtonPopoverCard,
+.cl-popoverBox,
+.cl-userButtonPopoverRoot {
+  z-index: 99999 !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 1rem !important;
+}
+
+.team-channel-list__header {
+  overflow: visible !important;
+}
+
+.desktop-sidebar-container {
+  overflow: visible !important;
+}
+
+
 
 

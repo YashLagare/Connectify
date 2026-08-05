@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-react";
+import { UserButton, useUser } from "@clerk/clerk-react";
 import {
     HashIcon,
     LockIcon,
@@ -261,6 +261,11 @@ const CustomChannelHeader = ({ onMobileMenuClick, onOpenSearch, onOpenAISummary,
                             Invite
                         </button>
                     )}
+
+                    {/* Clerk User Profile & Sign Out Button */}
+                    <div className="user-button-wrapper ml-2">
+                        <UserButton />
+                    </div>
                 </div>
             </div>
 
