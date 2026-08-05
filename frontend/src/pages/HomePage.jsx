@@ -11,25 +11,84 @@ import {
   Thread,
   Window
 } from "stream-chat-react";
+import AISummaryModal from "../components/AISummaryModal";
+import AudioHuddleBar from "../components/AudioHuddleBar";
 import ChannelListError from "../components/ChannelListError";
 import ChannelListLoading from "../components/ChannelListLoading";
+import CommandKModal from "../components/CommandKModal";
 import CreateChannelModal from "../components/CreateChannelModal";
 import CustomChannelHeader from "../components/CustomChannelHeader";
 import CustomChannelPreview from "../components/CustomChannelPreview";
 import EmptyChannelState from "../components/EmptyChannelState";
+import ImageLightbox from "../components/ImageLightbox";
 import MobileSidebar from "../components/MobileSidebar";
 import PageLoader from "../components/PageLoader";
 import UsersList from "../components/UsersList";
+import UserStatusModal from "../components/UserStatusModal";
+import { useTheme } from "../context/ThemeContext";
 import { useStreamChat } from "../hooks/useStreamChat";
+import { soundFX } from "../lib/sounds";
 import "../styles/stream-chat-theme.css";
 
 const HomePage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeChannel, setActiveChannel] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [lightboxImage, setLightboxImage] = useState(null);
+
+  // New Modals & Feature State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAISummaryOpen, setIsAISummaryOpen] = useState(false);
+  const [isUserStatusOpen, setIsUserStatusOpen] = useState(false);
+  const [userStatus, setUserStatus] = useState({ emoji: "", text: "" });
+  const [activeHuddleChannel, setActiveHuddleChannel] = useState(null);
+
   const { chatClient, error, isLoading } = useStreamChat();
+  const { soundEnabled } = useTheme();
+
+  // Keyboard Cmd+K / Ctrl+K search listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Listen to new message sound effects
+  useEffect(() => {
+    if (!chatClient) return;
+
+    const handleNewMessage = (event) => {
+      if (!soundEnabled) return;
+      if (event.user?.id === chatClient.user?.id) {
+        soundFX.playSend();
+      } else {
+        soundFX.playReceive();
+      }
+    };
+
+    chatClient.on("message.new", handleNewMessage);
+    return () => chatClient.off("message.new", handleNewMessage);
+  }, [chatClient, soundEnabled]);
+
+  // Handle Image Lightbox clicks on chat images
+  useEffect(() => {
+    const handleImageClick = (e) => {
+      const target = e.target;
+      if (target.tagName === "IMG" && target.closest(".str-chat__message")) {
+        e.preventDefault();
+        setLightboxImage(target.src);
+      }
+    };
+
+    document.addEventListener("click", handleImageClick);
+    return () => document.removeEventListener("click", handleImageClick);
+  }, []);
 
   // Set active channel from URL params
   useEffect(() => {
@@ -44,6 +103,7 @@ const HomePage = () => {
 
   // Handle channel selection
   const handleChannelSelect = (channel) => {
+    if (soundEnabled) soundFX.playClick();
     setActiveChannel(channel);
     setSearchParams({ channel: channel.id });
     setIsMobileSidebarOpen(false);
@@ -125,6 +185,11 @@ const HomePage = () => {
                   <span className="brand-name">Connectify</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  {userStatus?.emoji && (
+                    <span className="text-xs bg-purple-500/20 px-2 py-0.5 rounded-full text-purple-300 font-medium">
+                      {userStatus.emoji} {userStatus.text}
+                    </span>
+                  )}
                   <div className="user-button-wrapper">
                     <UserButton />
                   </div>
@@ -135,7 +200,10 @@ const HomePage = () => {
               <div className="team-channel-list__content">
                 <div className="create-channel-section">
                   <button
-                    onClick={() => setIsCreateModalOpen(true)}
+                    onClick={() => {
+                      if (soundEnabled) soundFX.playClick();
+                      setIsCreateModalOpen(true);
+                    }}
                     className="create-channel-btn"
                   >
                     <PlusIcon className="w-4 h-4" />
@@ -151,7 +219,7 @@ const HomePage = () => {
                     <CustomChannelPreview
                       channel={channel}
                       activeChannel={activeChannel}
-                      setActiveChannel={(channel) => setSearchParams({ channel: channel.id })}
+                      setActiveChannel={(ch) => handleChannelSelect(ch)}
                     />
                   )}
                   List={({ children, loading, error }) => (
@@ -207,6 +275,11 @@ const HomePage = () => {
                 <Window>
                   <CustomChannelHeader
                     onMobileMenuClick={() => setIsMobileSidebarOpen(true)}
+                    onOpenSearch={() => setIsSearchOpen(true)}
+                    onOpenAISummary={() => setIsAISummaryOpen(true)}
+                    onOpenUserStatus={() => setIsUserStatusOpen(true)}
+                    userStatus={userStatus}
+                    onJoinAudioHuddle={(ch) => setActiveHuddleChannel(ch)}
                   />
                   <MessageList />
                   <MessageInput />
@@ -214,20 +287,23 @@ const HomePage = () => {
                 <Thread />
               </Channel>
             ) : (
-              <div className="flex-1 flex items-center justify-center bg-white/98">
-                <div className="text-center max-w-md px-6">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center">
-                    <MessageCircleHeart className="w-10 h-10 text-purple-600" />
+              <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#160d2e] via-[#120826] to-[#0c051a] dark:from-[#160d2e] dark:to-[#0c051a] text-white">
+                <div className="text-center max-w-lg px-8 py-12 rounded-3xl bg-white/5 dark:bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl animate-fadeIn">
+                  <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-purple-500/30 to-purple-800/40 flex items-center justify-center border border-purple-500/30 shadow-lg shadow-purple-900/30">
+                    <MessageCircleHeart className="w-12 h-12 text-purple-400 animate-pulse" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Connectify</h2>
-                  <p className="text-gray-600 mb-8">
-                    Select a channel or start a conversation to begin messaging with your team.
+                  <h2 className="text-3xl font-extrabold text-white dark:text-white mb-3 tracking-tight">Welcome to Connectify</h2>
+                  <p className="text-gray-300 dark:text-gray-300 mb-8 text-base leading-relaxed">
+                    Select a channel or start a conversation from the sidebar to begin real-time messaging and video calls with your team.
                   </p>
                   <button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all"
+                    onClick={() => {
+                      if (soundEnabled) soundFX.playClick();
+                      setIsCreateModalOpen(true);
+                    }}
+                    className="px-8 py-3.5 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-900 text-white rounded-2xl font-bold shadow-xl shadow-purple-900/40 hover:shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all"
                   >
-                    Create Your First Channel
+                    + Create Your First Channel
                   </button>
                 </div>
               </div>
@@ -238,6 +314,51 @@ const HomePage = () => {
         {isCreateModalOpen && (
           <CreateChannelModal onClose={() => setIsCreateModalOpen(false)} />
         )}
+
+        {/* Lightbox Modal */}
+        {lightboxImage && (
+          <ImageLightbox
+            src={lightboxImage}
+            onClose={() => setLightboxImage(null)}
+          />
+        )}
+
+        {/* Command Search Palette Modal */}
+        <CommandKModal
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          channels={chatClient ? Object.values(chatClient.activeChannels || {}) : []}
+          users={[]}
+          onSelectChannel={(ch) => handleChannelSelect(ch)}
+          onSelectUser={() => {}}
+          onStartCall={() => {
+            if (activeChannel) {
+              window.open(`/call/${activeChannel.id}`, "_blank");
+            }
+          }}
+        />
+
+        {/* User Custom Status Modal */}
+        <UserStatusModal
+          isOpen={isUserStatusOpen}
+          onClose={() => setIsUserStatusOpen(false)}
+          currentStatus={userStatus}
+          onSaveStatus={(status) => setUserStatus(status)}
+        />
+
+        {/* AI Channel Summary Modal */}
+        <AISummaryModal
+          isOpen={isAISummaryOpen}
+          onClose={() => setIsAISummaryOpen(false)}
+          channelName={activeChannel?.data?.name || activeChannel?.id}
+          messages={activeChannel ? activeChannel.state?.messages || [] : []}
+        />
+
+        {/* Discord-Style Audio Huddle Bar */}
+        <AudioHuddleBar
+          activeHuddleChannel={activeHuddleChannel}
+          onLeaveHuddle={() => setActiveHuddleChannel(null)}
+        />
       </Chat>
     </div>
   );

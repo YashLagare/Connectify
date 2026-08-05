@@ -1272,3 +1272,80 @@
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #cbd5e0;
 }
+
+/* Light Theme Adaptations */
+.light .chat-wrapper {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+}
+
+.light .chat-container {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+.light .team-channel-list {
+  background: #ffffff;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.light .brand-name,
+.light .custom-channel-preview__name {
+  color: #0f172a !important;
+}
+
+/* Chat Main Layout & Background Reset */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  background: #160d2e;
+}
+
+.light .chat-main {
+  background: #f8fafc;
+}
+
+.str-chat__main-panel,
+.str-chat__thread,
+.str-chat__list,
+.str-chat__container,
+.str-chat__window {
+  background: transparent !important;
+  height: 100% !important;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.25rem 0.5rem;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.light .section-title {
+  color: #64748b !important;
+}
+
+.section-title::before {
+  display: none !important;
+}
+
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  letter-spacing: 0.02em;
+}
+
+

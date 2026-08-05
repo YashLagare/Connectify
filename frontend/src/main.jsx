@@ -15,6 +15,8 @@ import App from './App.jsx'
 import './index.css'
 import AuthProvider from './providers/AuthProvider.jsx'
 
+import { ThemeProvider } from './context/ThemeContext.jsx'
+
 const queryClient = new QueryClient()
 
 // Import your Publishable Key
@@ -48,7 +50,9 @@ createRoot(document.getElementById('root')).render(
         <QueryClientProvider client={queryClient}>
 
           <AuthProvider>
-            <App />
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
           </AuthProvider>
           <Toaster position='top-center' />
 
