@@ -1,10 +1,10 @@
 import { UserButton } from "@clerk/clerk-react";
-import { HashIcon, MenuIcon, MessageCircleHeart, PlusIcon, UsersIcon, XIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { MenuIcon, MessageCircleHeart, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   Channel,
-  ChannelList,
   Chat,
   MessageInput,
   MessageList,
@@ -13,18 +13,14 @@ import {
 } from "stream-chat-react";
 import AISummaryModal from "../components/AISummaryModal";
 import AudioHuddleBar from "../components/AudioHuddleBar";
-import ChannelListError from "../components/ChannelListError";
-import ChannelListLoading from "../components/ChannelListLoading";
 import CommandKModal from "../components/CommandKModal";
 import CreateChannelModal from "../components/CreateChannelModal";
 import CustomChannelHeader from "../components/CustomChannelHeader";
-import CustomChannelPreview from "../components/CustomChannelPreview";
-import EmptyChannelState from "../components/EmptyChannelState";
 import ImageLightbox from "../components/ImageLightbox";
 import MobileSidebar from "../components/MobileSidebar";
 import PageLoader from "../components/PageLoader";
-import UsersList from "../components/UsersList";
 import UserStatusModal from "../components/UserStatusModal";
+import WorkspaceSidebar from "../components/WorkspaceSidebar";
 import { useTheme } from "../context/ThemeContext";
 import { useStreamChat } from "../hooks/useStreamChat";
 import { soundFX } from "../lib/sounds";
@@ -37,7 +33,7 @@ const HomePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [lightboxImage, setLightboxImage] = useState(null);
 
-  // New Modals & Feature State
+  // Modals & Feature State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAISummaryOpen, setIsAISummaryOpen] = useState(false);
   const [isUserStatusOpen, setIsUserStatusOpen] = useState(false);
@@ -46,6 +42,29 @@ const HomePage = () => {
 
   const { chatClient, error, isLoading } = useStreamChat();
   const { soundEnabled } = useTheme();
+
+  // Lock body scrolling when mobile sidebar is open
+  useEffect(() => {
+    if (isMobileSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileSidebarOpen]);
+
+  // Keyboard Escape listener to close mobile drawer
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isMobileSidebarOpen) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileSidebarOpen]);
 
   // Keyboard Cmd+K / Ctrl+K search listener
   useEffect(() => {
@@ -130,15 +149,19 @@ const HomePage = () => {
   if (isLoading || !chatClient) return <PageLoader />;
 
   return (
-    <div className="chat-wrapper">
+    <div className="chat-wrapper overflow-x-hidden">
       <Chat client={chatClient}>
         <div className="chat-container">
 
-          {/* Mobile Header */}
+          {/* Single Global Mobile Top Header */}
           <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-gradient-to-b from-[#4a154b] to-[#350d36] border-b border-white/10 sticky top-0 z-40">
             <button
-              onClick={() => setIsMobileSidebarOpen(true)}
+              onClick={() => {
+                if (soundEnabled) soundFX.playClick();
+                setIsMobileSidebarOpen(true);
+              }}
               className="p-2 bg-white/10 rounded-lg text-white/80 hover:bg-white/20 transition-colors"
+              title="Open Workspace Navigation"
             >
               <MenuIcon className="w-5 h-5" />
             </button>
@@ -149,123 +172,53 @@ const HomePage = () => {
             <UserButton />
           </div>
 
-          {/* Mobile Sidebar */}
-          {isMobileSidebarOpen && (
-            <div
-              className="lg:hidden fixed inset-0 z-50"
-              onClick={() => setIsMobileSidebarOpen(false)}
-            >
-              <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-              <div
-                className="absolute left-0 top-0 bottom-0 w-[85vw] max-w-sm animate-slideIn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MobileSidebar
-                  chatClient={chatClient}
-                  activeChannel={activeChannel}
-                  onChannelSelect={handleChannelSelect}
-                  onClose={() => setIsMobileSidebarOpen(false)}
-                  onCreateChannel={() => {
-                    setIsMobileSidebarOpen(false);
-                    setIsCreateModalOpen(true);
-                  }}
+          {/* Mobile Sidebar Off-Screen Drawer */}
+          <AnimatePresence>
+            {isMobileSidebarOpen && (
+              <div className="lg:hidden fixed inset-0 z-50 overflow-hidden">
+                {/* Dark Backdrop Overlay */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                  onClick={() => setIsMobileSidebarOpen(false)}
                 />
-              </div>
-            </div>
-          )}
 
-          {/* LEFT SIDEBAR - Desktop */}
-          <div className="str-chat__channel-list hidden lg:block">
-            <div className="team-channel-list">
-
-              {/* HEADER */}
-              <div className="team-channel-list__header gap-4">
-                <div className="brand-container">
-                  <img src="/logo.png" alt="Logo" className="brand-logo" />
-                  <span className="brand-name">Connectify</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {userStatus?.emoji && (
-                    <span className="text-xs bg-purple-500/20 px-2 py-0.5 rounded-full text-purple-300 font-medium">
-                      {userStatus.emoji} {userStatus.text}
-                    </span>
-                  )}
-                  <div className="user-button-wrapper">
-                    <UserButton />
-                  </div>
-                </div>
-              </div>
-
-              {/* CHANNELS LIST */}
-              <div className="team-channel-list__content">
-                <div className="create-channel-section">
-                  <button
-                    onClick={() => {
-                      if (soundEnabled) soundFX.playClick();
+                {/* Sliding Drawer Container */}
+                <motion.div
+                  initial={{ x: "-100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                  className="absolute left-0 top-0 bottom-0 w-[85vw] max-w-sm h-full shadow-2xl z-50 bg-[#160d2e] dark:bg-[#160d2e]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MobileSidebar
+                    chatClient={chatClient}
+                    activeChannel={activeChannel}
+                    onChannelSelect={handleChannelSelect}
+                    onClose={() => setIsMobileSidebarOpen(false)}
+                    onCreateChannel={() => {
+                      setIsMobileSidebarOpen(false);
                       setIsCreateModalOpen(true);
                     }}
-                    className="create-channel-btn"
-                  >
-                    <PlusIcon className="w-4 h-4" />
-                    <span>Create Channel</span>
-                  </button>
-                </div>
-
-                {/* CHANNEL LIST */}
-                <ChannelList
-                  filters={{ members: { $in: [chatClient?.user?.id] } }}
-                  options={{ state: true, watch: true }}
-                  Preview={({ channel }) => (
-                    <CustomChannelPreview
-                      channel={channel}
-                      activeChannel={activeChannel}
-                      setActiveChannel={(ch) => handleChannelSelect(ch)}
-                    />
-                  )}
-                  List={({ children, loading, error }) => (
-                    <div className="channel-sections">
-                      <div className="section-header">
-                        <div className="section-title">
-                          <HashIcon className="w-4 h-4" />
-                          <span>Channels</span>
-                        </div>
-                      </div>
-
-                      {/* Better Loading Component */}
-                      {loading && <ChannelListLoading />}
-
-                      {/* Better Error Component */}
-                      {error && (
-                        <ChannelListError
-                          onRetry={() => window.location.reload()}
-                        />
-                      )}
-
-                      {/* Channel Items */}
-                      <div className="channels-list">
-                        {!loading && !error && (!children || children.length === 0) ? (
-                          <EmptyChannelState
-                            type="channels"
-                            onCreateClick={() => setIsCreateModalOpen(true)}
-                          />
-                        ) : (
-                          children
-                        )}
-                      </div>
-
-                      {/* Direct Messages Section */}
-                      <div className="section-header direct-messages">
-                        <div className="section-title">
-                          <UsersIcon className="w-4 h-4" />
-                          <span>Direct Messages</span>
-                        </div>
-                      </div>
-                      <UsersList activeChannel={activeChannel} />
-                    </div>
-                  )}
-                />
+                  />
+                </motion.div>
               </div>
-            </div>
+            )}
+          </AnimatePresence>
+
+          {/* LEFT SIDEBAR - Desktop Only */}
+          <div className="desktop-sidebar-container hidden lg:block w-80 shrink-0 h-full">
+            <WorkspaceSidebar
+              chatClient={chatClient}
+              activeChannel={activeChannel}
+              onChannelSelect={handleChannelSelect}
+              onCreateChannelClick={() => setIsCreateModalOpen(true)}
+              isMobile={false}
+            />
           </div>
 
           {/* RIGHT CONTAINER */}
@@ -274,7 +227,6 @@ const HomePage = () => {
               <Channel channel={activeChannel}>
                 <Window>
                   <CustomChannelHeader
-                    onMobileMenuClick={() => setIsMobileSidebarOpen(true)}
                     onOpenSearch={() => setIsSearchOpen(true)}
                     onOpenAISummary={() => setIsAISummaryOpen(true)}
                     onOpenUserStatus={() => setIsUserStatusOpen(true)}
