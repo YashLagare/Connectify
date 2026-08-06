@@ -25,7 +25,8 @@ Modern hybrid teams require seamless, low-latency messaging and rapid video/voic
 
 Project Screenshot Placeholder:
 
-[INSERT_PROJECT_COVER_SCREENSHOT_HERE]
+<img width="1892" height="904" alt="connectify" src="https://github.com/user-attachments/assets/c2f3f293-7b57-44b5-a245-e25c9975bedf" />
+
 
 ---
 
@@ -113,7 +114,8 @@ Teams, organizations, and developers seeking an open-architecture, production-re
 
 Project Screenshot Placeholder:
 
-[INSERT_PROJECT_OVERVIEW_SCREENSHOT_HERE]
+<img width="1822" height="911" alt="image" src="https://github.com/user-attachments/assets/bcdf0e42-d402-4856-a728-9ea4f7d04e8f" />
+
 
 ---
 
@@ -189,11 +191,6 @@ Project Screenshot Placeholder:
 | Dark/Light Theme Engine | Toggles theme tokens and glassmorphism styling | Custom visual ergonomics | [ThemeContext.jsx](file:///d:/MY-PROJECTS/Connectify/frontend/src/context/ThemeContext.jsx), [index.css](file:///d:/MY-PROJECTS/Connectify/frontend/src/index.css) |
 | Web Audio Sound FX | Synthesizes audio tones for send, receive, and call joins | Tactile UI feedback | [sounds.js](file:///d:/MY-PROJECTS/Connectify/frontend/src/lib/sounds.js) |
 
-Feature Screenshot Placeholders:
-
-[INSERT_HOME_PAGE_SCREENSHOT_HERE]
-
-[INSERT_FEATURE_SCREENSHOT_HERE]
 
 ---
 
