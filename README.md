@@ -1,8 +1,5 @@
 # Connectify - Enterprise Real-Time Communication & Video Collaboration Platform
 
-## Project Name
-Connectify
-
 ### Project Description
 Connectify is a full-stack, enterprise-grade real-time collaboration application combining high-performance messaging (channels, direct messaging, unread badges, pinned messages, media lightbox, custom emoji status, and AI thread summarization) with lightweight, 1-click video calling and Discord-style instant audio huddles.
 
@@ -74,9 +71,6 @@ Reduces engineering overhead by leveraging enterprise-grade SaaS primitives (Str
 ---
 
 # 2. PROJECT OVERVIEW
-
-## Project Name
-Connectify
 
 ## Objective
 Provide an authenticated, real-time messaging and video conferencing application built with enterprise-grade frontend aesthetics and resilient backend architecture.
