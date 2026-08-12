@@ -36,7 +36,12 @@ const AISummaryModal = ({ isOpen, onClose, channelName, messages }) => {
       setActionItems(data.actionItems || []);
     } catch (err) {
       console.error("Error generating summary:", err);
-      setError("Unable to generate summary right now. Please try again.");
+      const backendMessage = err?.response?.data?.error || err?.message;
+      setError(
+        backendMessage
+          ? `Unable to generate summary. ${backendMessage}`
+          : "Unable to generate summary right now. Please try again."
+      );
       setSummary("");
       setActionItems([]);
     } finally {

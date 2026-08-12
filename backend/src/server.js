@@ -13,12 +13,27 @@ import * as Sentry from "@sentry/node";
 const app = express();
 
 app.use(express.json());
-app.use(cors(
-  {
-    origin:  ENV.CLIENT_URL,
-    credentials: true
-  }
-))
+const normalizeOrigin = (origin) => origin?.replace(/\/+$/, "") || "";
+const allowedOrigins = (ENV.CLIENT_URL || "")
+  .split(",")
+  .map((url) => normalizeOrigin(url.trim()))
+  .filter(Boolean);
+console.log("CORS allowed origins:", allowedOrigins.length ? allowedOrigins : ["<any origin when CLIENT_URL not set>"]);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    }
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS policy does not allow access from origin ${origin}`));
+  },
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "OPTIONS"],
+}));
 app.use(clerkMiddleware());
 
 app.get("/debug-sentry", (req, res) => {
@@ -37,7 +52,15 @@ Sentry.setupExpressErrorHandler(app);
 const startServer = async () => {
   try {
     await connectDB();
-    if (ENV.NODE_ENV !== "production") {
+    const isVercel = Boolean(process.env.VERCEL);
+    console.log("Server environment:", {
+      nodeEnv: ENV.NODE_ENV,
+      port: ENV.PORT,
+      isVercel,
+      clientUrl: ENV.CLIENT_URL,
+    });
+
+    if (!isVercel && ENV.NODE_ENV !== "production") {
       app.listen(ENV.PORT, () => {
         console.log(`Server is running on port ${ENV.PORT}`);
       });

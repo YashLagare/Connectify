@@ -33,6 +33,10 @@ Project Screenshot Placeholder:
 - Moved `OPENROUTER_API_KEY` to backend `.env` — do NOT store secrets in the frontend `.env` (Vite environment files are bundled client-side).
 - Improved sidebar layout CSS to prevent channel/DM list clipping and ensure the last item remains visible (added `min-height:0` and bottom padding to the channel list container).
 - Frontend `AISummaryModal` now calls the backend summarization route instead of embedding AI keys in the browser.
+- Added deployment guidance for separate Vercel frontend and backend apps: set `VITE_API_BASE_URL` in frontend env to the backend URL, and set `CLIENT_URL` plus `OPENROUTER_API_KEY` in backend env.
+- Example production setup:
+  - Frontend Vercel env: `VITE_API_BASE_URL=https://connectify-backend.vercel.app/api`
+  - Backend Vercel env: `CLIENT_URL=https://connectify-frontend.vercel.app`, `OPENROUTER_API_KEY=<your-secret>`
 
 
 # 1. EXECUTIVE SUMMARY
