@@ -27,6 +27,14 @@ Project Screenshot Placeholder:
 
 ---
 
+## Recent Changes (Dev notes)
+
+- Fixed OpenRouter integration: backend now calls the correct API base `https://openrouter.ai/api/v1` and exposes a protected summarization endpoint at `POST /api/chat/summarize` (server-only, keeps API key secret).
+- Moved `OPENROUTER_API_KEY` to backend `.env` — do NOT store secrets in the frontend `.env` (Vite environment files are bundled client-side).
+- Improved sidebar layout CSS to prevent channel/DM list clipping and ensure the last item remains visible (added `min-height:0` and bottom padding to the channel list container).
+- Frontend `AISummaryModal` now calls the backend summarization route instead of embedding AI keys in the browser.
+
+
 # 1. EXECUTIVE SUMMARY
 
 ## Project Purpose

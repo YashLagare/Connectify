@@ -14,4 +14,7 @@ export const ENV = {
     INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
     INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
     CLIENT_URL: process.env.CLIENT_URL,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+    OPENROUTER_BASE_URL: process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1",
+    OPENROUTER_MODEL: process.env.OPENROUTER_MODEL || "gpt-4.1-mini",
 };

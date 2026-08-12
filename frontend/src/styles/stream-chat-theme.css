@@ -466,6 +466,7 @@
     );
   display: flex;
   flex-direction: column;
+  min-height: 0; /* allow flex children to shrink and enable internal scrolling */
 }
 
 .team-channel-list::before {
@@ -540,6 +541,9 @@
   overflow-y: auto;
   position: relative;
   z-index: 1;
+  min-height: 0; /* prevents WebKit/Blink from disallowing inner scroll */
+  padding-bottom: 1.25rem; /* ensure last item isn't clipped by rounded container */
+  scrollbar-gutter: stable both-edges; /* reserve space for scrollbar to avoid overlap */
 }
 
 .team-channel-list__content::-webkit-scrollbar {
@@ -1430,6 +1434,8 @@
 
 .desktop-sidebar-container {
   overflow: visible !important;
+  height: 100% !important; /* ensure sidebar container fills parent */
+  min-height: 0 !important; /* allow children to scroll inside */
 }
 
 

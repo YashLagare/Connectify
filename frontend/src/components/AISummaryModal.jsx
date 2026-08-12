@@ -1,45 +1,47 @@
 import { BotIcon, CheckCircle2Icon, CopyIcon, SparklesIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { summarizeChannel } from "../lib/api";
 
 const AISummaryModal = ({ isOpen, onClose, channelName, messages }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState("");
   const [actionItems, setActionItems] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
-  const handleGenerateSummary = () => {
+  const handleGenerateSummary = async () => {
     setIsGenerating(true);
     setSummary("");
     setActionItems([]);
+    setError("");
 
-    setTimeout(() => {
+    try {
+      const simplifiedMessages = (messages || [])
+        .filter((m) => m?.text)
+        .slice(-25)
+        .map((m) => ({
+          userName: m.user?.name || m.user?.id || "Unknown",
+          text: m.text,
+        }));
+
+      const data = await summarizeChannel({
+        channelName,
+        messages: simplifiedMessages,
+      });
+
+      setSummary(data.summary || "No summary was generated.");
+      setActionItems(data.actionItems || []);
+    } catch (err) {
+      console.error("Error generating summary:", err);
+      setError("Unable to generate summary right now. Please try again.");
+      setSummary("");
+      setActionItems([]);
+    } finally {
       setIsGenerating(false);
-
-      if (!messages || messages.length === 0) {
-        setSummary(`No recent messages found in #${channelName || "channel"} to summarize.`);
-        setActionItems([]);
-        return;
-      }
-
-      // Generate context aware summary from actual channel messages
-      const textSamples = messages
-        .filter((m) => m.text)
-        .slice(-15)
-        .map((m) => `${m.user?.name || m.user?.id}: ${m.text}`);
-
-      setSummary(
-        `Channel #${channelName || "general"} Summary:\n\nRecent discussions focused on team alignment, video call scheduling, and workspace feature updates. The team exchanged ${messages.length} messages regarding ongoing technical deliverables.`
-      );
-
-      setActionItems([
-        "Review latest video call schedule and confirm attendance",
-        "Finalize design token system and test dark/light theme switching",
-        "Follow up on user sync and Stream Chat channel permissions"
-      ]);
-    }, 1200);
+    }
   };
 
   const handleCopy = () => {
@@ -74,6 +76,12 @@ const AISummaryModal = ({ isOpen, onClose, channelName, messages }) => {
           </button>
         </div>
 
+        {error && !isGenerating && (
+          <div className="mb-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-200">
+            {error}
+          </div>
+        )}
+
         {!summary && !isGenerating && (
           <div className="py-8 text-center">
             <BotIcon className="w-12 h-12 text-purple-400 mx-auto mb-3 animate-bounce" />
@@ -82,7 +90,7 @@ const AISummaryModal = ({ isOpen, onClose, channelName, messages }) => {
             </p>
             <button
               onClick={handleGenerateSummary}
-              className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-purple-800 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 transition-all flex items-center gap-2 mx-auto text-sm"
+              className="px-6 py-2.5 bg-linear-to-r from-purple-600 to-purple-800 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 transition-all flex items-center gap-2 mx-auto text-sm"
             >
               <SparklesIcon className="w-4 h-4" />
               Generate Summary
