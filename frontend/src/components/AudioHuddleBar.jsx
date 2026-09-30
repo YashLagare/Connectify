@@ -66,11 +66,10 @@ const AudioHuddleBar = ({ activeHuddleChannel, onLeaveHuddle }) => {
         <button
           onClick={toggleMute}
           title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
-          className={`p-2 rounded-xl border transition-all ${
-            isMuted
-              ? "bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30"
-              : "bg-white/10 border-white/10 text-white hover:bg-white/20"
-          }`}
+          className={`p-2 rounded-xl border transition-all ${isMuted
+            ? "bg-red-500/20 border-red-500/40 text-red-400 hover:bg-red-500/30"
+            : "bg-white/10 border-white/10 text-white hover:bg-white/20"
+            }`}
         >
           {isMuted ? <MicOffIcon className="w-4 h-4" /> : <MicIcon className="w-4 h-4" />}
         </button>
