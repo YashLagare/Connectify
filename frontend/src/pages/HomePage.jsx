@@ -282,7 +282,7 @@ const HomePage = () => {
           channels={chatClient ? Object.values(chatClient.activeChannels || {}) : []}
           users={[]}
           onSelectChannel={(ch) => handleChannelSelect(ch)}
-          onSelectUser={() => {}}
+          onSelectUser={() => { }}
           onStartCall={() => {
             if (activeChannel) {
               window.open(`/call/${activeChannel.id}`, "_blank");
