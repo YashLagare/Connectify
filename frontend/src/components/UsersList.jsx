@@ -98,7 +98,7 @@ const UsersList = ({ activeChannel }) => {
     }
 
     return (
-        <div className="team-channel-list__users">
+        <div className="team-channel-list__users pb-10">
             {users.map((user) => {
                 const channelId = [client.user.id, user.id].sort().join("-").slice(0, 64);
                 const channel = client.channel("messaging", channelId, {

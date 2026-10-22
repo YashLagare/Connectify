@@ -79,12 +79,21 @@
   height: 100%;
 }
 
+/* Allow channel list to expand to full scrollable content height within custom sidebar */
+.team-channel-list .str-chat,
+.team-channel-list .str-chat__channel-list {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+}
+
 /* Channel List Sidebar */
 .str-chat__channel-list {
-  height: 100%;
+  height: auto;
+  min-height: 100%;
   backdrop-filter: blur(25px);
   border: none !important;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
@@ -521,10 +530,10 @@
   z-index: 1;
   min-height: 0;
   /* prevents WebKit/Blink from disallowing inner scroll */
-  padding-bottom: 1.25rem;
+  padding-bottom: 3.5rem;
   /* ensure last item isn't clipped by rounded container */
-  scrollbar-gutter: stable both-edges;
-  /* reserve space for scrollbar to avoid overlap */
+  scroll-padding-bottom: 2rem;
+  scroll-behavior: smooth;
 }
 
 .team-channel-list__content::-webkit-scrollbar {
@@ -755,7 +764,7 @@
 }
 
 .team-channel-list__users {
-  padding: 0.5rem 1rem 1rem;
+  padding: 0.5rem 1rem 2.5rem;
   position: relative;
 }
 

@@ -51,7 +51,7 @@ const WorkspaceSidebar = ({
       </div>
 
       {/* Content Area */}
-      <div className="team-channel-list__content flex-1 overflow-y-auto">
+      <div className="team-channel-list__content flex-1 overflow-y-auto pb-12">
         {/* Create Channel Action */}
         <div className="create-channel-section p-4">
           <button
