@@ -39,7 +39,7 @@
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
 }
 
-.brand-logo {
+.logo-wrapper .brand-logo {
   width: 48px;
   height: 48px;
   filter: brightness(0) invert(1);
