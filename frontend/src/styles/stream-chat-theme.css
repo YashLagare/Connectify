@@ -570,6 +570,7 @@
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
+  filter: none !important;
   box-shadow:
     0 8px 25px rgba(74, 21, 75, 0.4),
     0 4px 15px rgba(114, 9, 183, 0.3),
@@ -1269,13 +1270,23 @@
 }
 
 .light .team-channel-list {
-  background: #ffffff;
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 
-.light .brand-name,
-.light .custom-channel-preview__name {
+.light .team-channel-list::before,
+.light .team-channel-list::after {
+  opacity: 0.12 !important;
+}
+
+.light .brand-logo {
+  filter: none !important;
+  box-shadow: 0 4px 15px rgba(116, 58, 213, 0.15) !important;
+}
+
+.light .brand-name {
   color: #0f172a !important;
+  text-shadow: none !important;
 }
 
 /* Chat Main Layout & Background Reset */
@@ -1325,27 +1336,59 @@
   display: none !important;
 }
 
-.brand-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #ffffff !important;
-  letter-spacing: 0.02em;
-}
-
-/* Light Mode Overrides for Sidebar Channel Items */
+/* Light Mode Overrides for Sidebar Channel Items & Users */
 .light .str-chat__channel-preview-messenger {
   color: #1e293b !important;
-  background: transparent !important;
-  border-color: transparent !important;
+  background: rgba(0, 0, 0, 0.02) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.light .str-chat__channel-preview-messenger span,
+.light .team-channel-list__users span {
+  color: #1e293b !important;
+}
+
+.light .str-chat__channel-preview-messenger p,
+.light .str-chat__channel-preview-messenger .text-gray-500 {
+  color: #64748b !important;
+}
+
+.light .str-chat__channel-preview-messenger svg {
+  color: #64748b !important;
 }
 
 .light .str-chat__channel-preview-messenger:hover {
   background: rgba(124, 58, 237, 0.08) !important;
+  border-color: rgba(124, 58, 237, 0.25) !important;
 }
 
-.light .str-chat__channel-preview-messenger--active {
-  background: rgba(124, 58, 237, 0.15) !important;
-  border-color: rgba(124, 58, 237, 0.3) !important;
+.light .str-chat__channel-preview-messenger:hover span,
+.light .str-chat__channel-preview-messenger:hover svg {
+  color: #7c3aed !important;
+}
+
+.light .str-chat__channel-preview-messenger--active,
+.light .str-chat__channel-preview-messenger[class*="from-purple"] {
+  background: rgba(124, 58, 237, 0.12) !important;
+  border: 1px solid rgba(124, 58, 237, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.12) !important;
+}
+
+.light .str-chat__channel-preview-messenger--active span,
+.light .str-chat__channel-preview-messenger[class*="from-purple"] span {
+  color: #6b21a8 !important;
+  font-weight: 700 !important;
+}
+
+.light .str-chat__channel-preview-messenger--active svg,
+.light .str-chat__channel-preview-messenger[class*="from-purple"] svg {
+  color: #7c3aed !important;
+}
+
+.light .team-channel-list__users .bg-gray-400,
+.light .team-channel-list__users .bg-gray-500 {
+  background-color: #cbd5e1 !important;
+  color: #334155 !important;
 }
 
 /* Mobile & Small Screen Responsive Layout Fixes */

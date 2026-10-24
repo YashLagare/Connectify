@@ -41,7 +41,7 @@ const HomePage = () => {
   const [activeHuddleChannel, setActiveHuddleChannel] = useState(null);
 
   const { chatClient, error, isLoading } = useStreamChat();
-  const { soundEnabled } = useTheme();
+  const { theme, soundEnabled } = useTheme();
 
   // Lock body scrolling when mobile sidebar is open
   useEffect(() => {
@@ -150,7 +150,7 @@ const HomePage = () => {
 
   return (
     <div className="chat-wrapper overflow-x-hidden">
-      <Chat client={chatClient}>
+      <Chat client={chatClient} theme={theme === "light" ? "str-chat__theme-light" : "str-chat__theme-dark"}>
         <div className="chat-container">
 
           {/* Single Global Mobile Top Header */}
