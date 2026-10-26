@@ -715,4 +715,4 @@ React Component Updates Message List UI
 
 ---
 
-Written by Yash Lagare
+Written by Yash Lagare.
